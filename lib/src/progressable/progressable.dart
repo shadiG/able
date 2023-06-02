@@ -27,7 +27,21 @@ abstract class Progressable {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is Progressable && runtimeType == other.runtimeType;
+      identical(this, other) ||
+      other is Progressable &&
+          runtimeType == other.runtimeType &&
+          state == other.state &&
+          success == other.success &&
+          (this as SuccessProgressable).success == (other as SuccessProgressable).success &&
+          hasError == other.hasError &&
+          error == other.error;
+
+  @override
+  int get hashCode =>
+      (this as SuccessProgressable).success.hashCode ^
+      state.hashCode ^
+      (this as ErrorProgressable).exception.hashCode ^
+      hasError.hashCode;
 
   @override
   String toString() {
@@ -44,9 +58,7 @@ abstract class Progressable {
         throw StateError('no case for ${describeEnum(state)}');
     }
   }
-
-  @override
-  int get hashCode => super.hashCode;
+  
 
   AbleState get state => () {
         if (this is IdleProgressable) {

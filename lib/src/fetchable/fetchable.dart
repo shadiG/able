@@ -1,3 +1,4 @@
+import 'package:able/able.dart';
 import 'package:able/src/common/able_state.dart';
 import 'package:able/src/progressable/progressable.dart';
 import 'package:flutter/foundation.dart';
@@ -72,7 +73,14 @@ abstract class Fetchable<D> {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is Fetchable && runtimeType == other.runtimeType;
+      identical(this, other) ||
+      other is Fetchable &&
+          runtimeType == other.runtimeType &&
+          this.state == other.state &&
+          success == other.success &&
+          (this as SuccessFetchable).data == (other as SuccessFetchable).data &&
+          hasError == other.hasError &&
+          error == other.error;
 
   @override
   String toString() {
@@ -91,7 +99,11 @@ abstract class Fetchable<D> {
   }
 
   @override
-  int get hashCode => super.hashCode;
+  int get hashCode =>
+      (this as SuccessFetchable).data.hashCode ^
+      state.hashCode ^
+      (this as ErrorFetchable).exception.hashCode ^
+      hasError.hashCode;
 
   AbleState get state => () {
         if (this is IdleFetchable<D>) {
