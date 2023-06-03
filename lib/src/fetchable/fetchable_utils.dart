@@ -34,9 +34,9 @@ extension FetchableExtension<D> on Fetchable<D> {
 Stream<Fetchable<D>> futureAsFetchable<D>(
     Future<D> Function() func,
     ) async* {
-  yield Fetchable.busy();
+  yield Fetchable<D>.busy();
   final data = await func();
-  yield Fetchable.success(data);
+  yield Fetchable<D>.success(data);
   // errors are processed by a stream
 }
 
@@ -44,15 +44,15 @@ Stream<Fetchable<D>> futureAsFetchable<D>(
 Stream<Fetchable<D>> streamAsFetchable<D>(
     Stream<D> Function() func
     ) async* {
-  yield Fetchable.busy();
+  yield Fetchable<D>.busy();
   yield* func()
-      .map((event) => Fetchable.success(event));
+      .map((event) => Fetchable<D>.success(event));
   // errors are processed by a stream
 }
 
 
 Fetchable<Tuple2<T1, T2>> combine2F<T1, T2>({required Fetchable<T1> f1, required Fetchable<T2> f2}) {
-  return toFetchable(
+  return toFetchable<Tuple2<T1, T2>>(
     data: f1.success && f2.success ? Tuple2(f1.data, f2.data) : null,
     state: f1.state + f2.state,
     exception: f1.hasError || f2.hasError ? f1.error ?? f2.error:null,
@@ -61,7 +61,7 @@ Fetchable<Tuple2<T1, T2>> combine2F<T1, T2>({required Fetchable<T1> f1, required
 
 
 Fetchable<Tuple3<T1, T2, T3>> combine3F<T1, T2, T3>({required Fetchable<T1> f1, required Fetchable<T2> f2, required Fetchable<T3> f3}) {
-  return toFetchable(
+  return toFetchable<Tuple3<T1, T2, T3>>(
     data: f1.success && f2.success && f3.success ? Tuple3(f1.data, f2.data, f3.data) : null,
     state: f1.state + f2.state + f3.state,
     exception: f1.error ?? f2.error ?? f3.error,
@@ -70,7 +70,7 @@ Fetchable<Tuple3<T1, T2, T3>> combine3F<T1, T2, T3>({required Fetchable<T1> f1, 
 
 
 Fetchable<Tuple4<T1, T2, T3, T4>> combine4F<T1, T2, T3, T4>({required Fetchable<T1> f1, required Fetchable<T2> f2, required Fetchable<T3> f3, required Fetchable<T4> f4}) {
-  return toFetchable(
+  return toFetchable<Tuple4<T1, T2, T3, T4>>(
     data: f1.success && f2.success && f3.success && f4.success ? Tuple4(f1.data, f2.data, f3.data, f4.data) : null,
     state: f1.state + f2.state + f3.state + f4.state,
     exception: f1.hasError || f2.hasError || f3.hasError || f4.hasError ? f1.error ?? f2.error ?? f3.error ?? f4.error :null,
@@ -79,7 +79,7 @@ Fetchable<Tuple4<T1, T2, T3, T4>> combine4F<T1, T2, T3, T4>({required Fetchable<
 }
 
 Fetchable<Tuple5<T1, T2, T3, T4, T5>> combine5F<T1, T2, T3, T4, T5>({required Fetchable<T1> f1, required Fetchable<T2> f2, required Fetchable<T3> f3, required Fetchable<T4> f4, required Fetchable<T5> f5}) {
-  return toFetchable(
+  return toFetchable<Tuple5<T1, T2, T3, T4, T5>>(
     data: f1.success && f2.success && f3.success && f4.success && f5.success ? Tuple5(f1.data, f2.data, f3.data, f4.data, f5.data) : null,
     state: f1.state + f2.state + f3.state + f4.state + f5.state,
     exception: f1.hasError || f2.hasError || f3.hasError || f4.hasError || f5.hasError ? f1.error ?? f2.error ?? f3.error ?? f4.error ?? f5.error :null,
@@ -88,7 +88,7 @@ Fetchable<Tuple5<T1, T2, T3, T4, T5>> combine5F<T1, T2, T3, T4, T5>({required Fe
 }
 
 Fetchable<Tuple6<T1, T2, T3, T4, T5, T6>> combine6F<T1, T2, T3, T4, T5, T6>({required Fetchable<T1> f1, required Fetchable<T2> f2, required Fetchable<T3> f3, required Fetchable<T4> f4, required Fetchable<T5> f5, required Fetchable<T6> f6}) {
-  return toFetchable(
+  return toFetchable<Tuple6<T1, T2, T3, T4, T5, T6>>(
     data: f1.success && f2.success && f3.success && f4.success && f5.success && f6.success ? Tuple6(f1.data, f2.data, f3.data, f4.data, f5.data, f6.data) : null,
     state: f1.state + f2.state + f3.state + f4.state + f5.state + f6.state,
     exception: f1.hasError || f2.hasError || f3.hasError || f4.hasError || f5.hasError || f6.hasError ? f1.error ?? f2.error ?? f3.error ?? f4.error ?? f5.error ?? f6.error :null,
@@ -97,7 +97,7 @@ Fetchable<Tuple6<T1, T2, T3, T4, T5, T6>> combine6F<T1, T2, T3, T4, T5, T6>({req
 }
 
 Fetchable<Tuple7<T1, T2, T3, T4, T5, T6, T7>> combine7F<T1, T2, T3, T4, T5, T6, T7>({required Fetchable<T1> f1, required Fetchable<T2> f2, required Fetchable<T3> f3, required Fetchable<T4> f4, required Fetchable<T5> f5, required Fetchable<T6> f6, required Fetchable<T7> f7}) {
-  return toFetchable(
+  return toFetchable<Tuple7<T1, T2, T3, T4, T5, T6, T7>>(
     data: f1.success && f2.success && f3.success && f4.success && f5.success && f6.success && f7.success ? Tuple7(f1.data, f2.data, f3.data, f4.data, f5.data, f6.data, f7.data) : null,
     state: f1.state + f2.state + f3.state + f4.state + f5.state +f7.state,
     exception: f1.hasError || f2.hasError || f3.hasError || f4.hasError || f5.hasError || f6.hasError  || f7.hasError ? f1.error ?? f2.error ?? f3.error ?? f4.error ?? f5.error ?? f6.error ?? f7.error:null,

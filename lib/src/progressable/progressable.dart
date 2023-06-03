@@ -1,5 +1,4 @@
 import 'package:able/able.dart';
-import 'package:able/src/common/able_state.dart';
 import 'package:flutter/foundation.dart';
 
 abstract class Progressable {
@@ -17,7 +16,7 @@ abstract class Progressable {
     return BusyProgressable();
   }
 
-  factory Progressable.error(Exception exception) {
+  factory Progressable.error(dynamic exception) {
     return ErrorProgressable(exception: exception);
   }
 
@@ -76,7 +75,7 @@ abstract class Progressable {
 }
 
 
-Progressable toProgressable({Exception? exception, required AbleState state}) {
+Progressable toProgressable({dynamic exception, required AbleState state}) {
   switch (state) {
     case AbleState.idle:
       return IdleProgressable();
@@ -107,7 +106,7 @@ class BusyProgressable<D> extends Progressable {
 }
 
 class ErrorProgressable<D> extends Progressable {
-  final Exception exception;
+  final dynamic exception;
 
   ErrorProgressable({required this.exception}) : super._();
 }

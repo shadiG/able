@@ -1,5 +1,4 @@
 import 'package:able/able.dart';
-import 'package:able/src/common/able_state.dart';
 import 'package:able/src/progressable/progressable.dart';
 import 'package:flutter/foundation.dart';
 
@@ -7,7 +6,7 @@ abstract class Fetchable<D> {
   Fetchable._();
 
   factory Fetchable.idle() {
-    return IdleFetchable<D>();
+    return IdleFetchable();
   }
 
   factory Fetchable.success(D data) {
@@ -15,15 +14,15 @@ abstract class Fetchable<D> {
   }
 
   factory Fetchable.busy() {
-    return BusyFetchable<D>();
+    return BusyFetchable();
   }
 
-  factory Fetchable.error(Exception exception) {
-    return ErrorFetchable<D>(exception: exception);
+  factory Fetchable.error(dynamic exception) {
+    return ErrorFetchable(exception: exception);
   }
 
   Fetchable<D> toBusy() {
-    return BusyFetchable<D>();
+    return BusyFetchable();
   }
 
   Progressable asProgressable() {
@@ -44,13 +43,13 @@ abstract class Fetchable<D> {
   Fetchable<ND> mapSuccess<ND>(Function(D data) mapper) {
     switch (state) {
       case AbleState.idle:
-        return IdleFetchable<ND>();
+        return Fetchable.idle();
       case AbleState.busy:
-        return BusyFetchable<ND>();
+        return Fetchable.busy();
       case AbleState.success:
         return SuccessFetchable<ND>(data: mapper((this as SuccessFetchable<ND>).data as D));
       case AbleState.error:
-        return ErrorFetchable<ND>(exception: (this as ErrorFetchable).exception);
+        return Fetchable.error((this as ErrorFetchable).exception);
       default:
         throw StateError('no case for ${describeEnum(state)}');
     }
@@ -59,13 +58,13 @@ abstract class Fetchable<D> {
   Fetchable<ND> cast<ND>() {
     switch (state) {
       case AbleState.idle:
-        return IdleFetchable<ND>();
+        return Fetchable.idle();
       case AbleState.busy:
-        return BusyFetchable<ND>();
+        return Fetchable.busy();
       case AbleState.success:
         return SuccessFetchable<ND>(data: (this as SuccessFetchable<ND>).data);
       case AbleState.error:
-        return ErrorFetchable<ND>(exception: (this as ErrorFetchable).exception);
+        return Fetchable.error( (this as ErrorFetchable).exception);
       default:
         throw StateError('no case for ${describeEnum(state)}');
     }
@@ -100,9 +99,9 @@ abstract class Fetchable<D> {
 
   @override
   int get hashCode =>
-      (this as SuccessFetchable).data.hashCode ^
+      (this as SuccessFetchable<D>).data.hashCode ^
       state.hashCode ^
-      (this as ErrorFetchable).exception.hashCode ^
+      (this as ErrorFetchable<D>).exception.hashCode ^
       hasError.hashCode;
 
   AbleState get state => () {
@@ -120,7 +119,7 @@ abstract class Fetchable<D> {
       }();
 }
 
-Fetchable<D> toFetchable<D>({D? data, Exception? exception, required AbleState state}) {
+Fetchable<D> toFetchable<D>({D? data, dynamic exception, required AbleState state}) {
   switch (state) {
     case AbleState.idle:
       return IdleFetchable<D>();
@@ -156,7 +155,7 @@ class BusyFetchable<D> extends Fetchable<D> {
 }
 
 class ErrorFetchable<D> extends Fetchable<D> {
-  final Exception exception;
+  final dynamic exception;
 
   ErrorFetchable({required this.exception}) : super._();
 }
