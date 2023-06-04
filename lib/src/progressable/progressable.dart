@@ -24,24 +24,29 @@ abstract class Progressable {
     return BusyProgressable();
   }
 
+  Fetchable<D> asFetchable<D>(D data) {
+    switch (state) {
+      case AbleState.idle:
+        return Fetchable.idle();
+      case AbleState.busy:
+        return Fetchable.busy();
+      case AbleState.success:
+        return Fetchable<D>.success(data);
+      case AbleState.error:
+        return Fetchable.error((this as ErrorProgressable).exception);
+      default:
+        throw StateError('no case for ${describeEnum(this)}');
+    }
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Progressable &&
           runtimeType == other.runtimeType &&
           state == other.state &&
-          success == other.success &&
-          (this as SuccessProgressable).success == (other as SuccessProgressable).success &&
-          hasError == other.hasError &&
           error == other.error;
-
-  @override
-  int get hashCode =>
-      (this as SuccessProgressable).success.hashCode ^
-      state.hashCode ^
-      (this as ErrorProgressable).exception.hashCode ^
-      hasError.hashCode;
-
+  
   @override
   String toString() {
     switch (state) {

@@ -77,7 +77,7 @@ abstract class Fetchable<D> {
           runtimeType == other.runtimeType &&
           this.state == other.state &&
           success == other.success &&
-          (this as SuccessFetchable).data == (other as SuccessFetchable).data &&
+          ((this is SuccessFetchable && other is SuccessFetchable) && data == other.data) &&
           hasError == other.hasError &&
           error == other.error;
 
@@ -96,13 +96,7 @@ abstract class Fetchable<D> {
         throw StateError('no case for ${describeEnum(this)}');
     }
   }
-
-  @override
-  int get hashCode =>
-      (this as SuccessFetchable<D>).data.hashCode ^
-      state.hashCode ^
-      (this as ErrorFetchable<D>).exception.hashCode ^
-      hasError.hashCode;
+  
 
   AbleState get state => () {
         if (this is IdleFetchable<D>) {

@@ -17,7 +17,7 @@ extension ProgressableExtension on Progressable{
 
   dynamic get error => () {
     if (state != AbleState.error) {
-      throw StateError('Fetchable(${describeEnum(state)}) : can not get data in this state');
+      return null;
     }
     return (this as ErrorProgressable).exception;
   }();
