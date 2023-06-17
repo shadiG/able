@@ -5,17 +5,20 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
 
 const double _kDefaultIndicatorRadius = 10.0;
 
 class ActivityIndicator extends StatefulWidget {
   const ActivityIndicator({
-    super.key,
+    Key? key,
     this.animating = true,
     this.radius = _kDefaultIndicatorRadius,
     this.activeColor,
   })  : assert(radius > 0.0),
-        progress = 1.0;
+        progress = 1.0,
+        super(key: key);
 
   /// Creates a non-animated activity indicator that displays
   /// a partial count of ticks based on the value of [progress].
@@ -24,14 +27,15 @@ class ActivityIndicator extends StatefulWidget {
   /// will be shown) and 1.0 (all ticks will be shown) inclusive. Defaults
   /// to 1.0.
   const ActivityIndicator.partiallyRevealed({
-    super.key,
+    Key? key,
     this.radius = _kDefaultIndicatorRadius,
     this.progress = 1.0,
     this.activeColor,
   })  : assert(radius > 0.0),
         assert(progress >= 0.0),
         assert(progress <= 1.0),
-        animating = false;
+        animating = false,
+        super(key: key);
 
   /// Whether the activity indicator is running its animation.
   ///
@@ -54,10 +58,12 @@ class ActivityIndicator extends StatefulWidget {
   final Color? activeColor;
 
   @override
-  State<ActivityIndicator> createState() => _ActivityIndicatorState();
+  _ActivityIndicatorState createState() =>
+      _ActivityIndicatorState();
 }
 
-class _ActivityIndicatorState extends State<ActivityIndicator> with SingleTickerProviderStateMixin {
+class _ActivityIndicatorState extends State<ActivityIndicator>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -133,13 +139,13 @@ class _ActivityIndicatorPainter extends CustomPainter {
     required this.radius,
     required this.progress,
   })  : tickFundamentalRRect = RRect.fromLTRBXY(
-          -radius / _kDefaultIndicatorRadius,
-          -radius / 3.0,
-          radius / _kDefaultIndicatorRadius,
-          -radius,
-          radius / _kDefaultIndicatorRadius,
-          radius / _kDefaultIndicatorRadius,
-        ),
+    -radius / _kDefaultIndicatorRadius,
+    -radius / 3.0,
+    radius / _kDefaultIndicatorRadius,
+    -radius,
+    radius / _kDefaultIndicatorRadius,
+    radius / _kDefaultIndicatorRadius,
+  ),
         super(repaint: position);
 
   final Animation<double> position;
@@ -161,7 +167,8 @@ class _ActivityIndicatorPainter extends CustomPainter {
 
     for (int i = 0; i < tickCount * progress; ++i) {
       final int t = (i - activeTick) % tickCount;
-      paint.color = activeColor.withAlpha(progress < 1 ? _partiallyRevealedAlpha : _kAlphaValues[t]);
+      paint.color = activeColor
+          .withAlpha(progress < 1 ? _partiallyRevealedAlpha : _kAlphaValues[t]);
       canvas.drawRRect(tickFundamentalRRect, paint);
       canvas.rotate(_kTwoPI / tickCount);
     }
@@ -171,6 +178,8 @@ class _ActivityIndicatorPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ActivityIndicatorPainter oldPainter) {
-    return oldPainter.position != position || oldPainter.activeColor != activeColor || oldPainter.progress != progress;
+    return oldPainter.position != position ||
+        oldPainter.activeColor != activeColor ||
+        oldPainter.progress != progress;
   }
 }

@@ -1,3 +1,4 @@
+
 import 'package:flutter/foundation.dart';
 
 enum AbleState {
@@ -5,10 +6,11 @@ enum AbleState {
   busy,
   success,
   error,
+  
 }
 
 extension AbleStateExtension on AbleState {
-  AbleState operator +(AbleState other) {
+  AbleState operator + (AbleState other) {
     if (this == AbleState.idle || other == AbleState.idle) {
       return AbleState.idle;
     } else if (this == AbleState.busy || other == AbleState.busy) {
@@ -20,4 +22,5 @@ extension AbleStateExtension on AbleState {
     }
     throw StateError('no case for this ${describeEnum(this)}');
   }
+  
 }

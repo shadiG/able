@@ -1,3 +1,4 @@
+
 import 'dart:async';
 
 import 'package:able/able.dart';
@@ -8,24 +9,25 @@ Widget widgetForFetchable<D>({
   required BuildContext context,
   required Fetchable<D> fetchable,
   required Widget Function(BuildContext context, D data) buildSuccess,
-  required Widget Function(BuildContext context, dynamic error) buildError,
   Widget Function(BuildContext context)? buildBusy,
+  required Widget Function(BuildContext context, dynamic error) buildError,
   bool treatIdleAsBusy = true,
 }) {
-  if (fetchable.idle && !treatIdleAsBusy) {
+  if(fetchable.idle && !treatIdleAsBusy) {
     return Container();
   }
-  if (fetchable.error != null) {
+  if(fetchable.error != null) {
     return buildError(context, fetchable.error);
   }
-  if (fetchable.busy || (fetchable.idle && treatIdleAsBusy)) {
+  if(fetchable.busy || (fetchable.idle && treatIdleAsBusy)) {
     return buildBusy != null ? buildBusy(context) : const ActivityIndicator();
   }
-  if (fetchable.success) {
+  if(fetchable.success) {
     return buildSuccess(context, fetchable.data);
   }
   throw StateError('no case for $fetchable');
 }
+
 
 class ProgressableResultPresenter<S> {
   final Progressable Function(S state) progressable;
@@ -34,30 +36,26 @@ class ProgressableResultPresenter<S> {
   final VoidCallback? onSuccess;
   final void Function(dynamic e)? onError;
 
-  ProgressableResultPresenter({
-    required this.progressable,
-    this.errorToMessage,
-    this.onSuccess,
-    this.onError,
-    this.shouldIgnoreMessage,
-  });
+  ProgressableResultPresenter({required this.progressable, this.errorToMessage, this.onSuccess, this.onError, this.shouldIgnoreMessage});
 }
 
 class ProgressablesResultPresenter<C extends Cubit<S>, S> extends StatefulWidget {
+
   final Widget child;
   final List<ProgressableResultPresenter> presenters;
 
   const ProgressablesResultPresenter({
+    Key? key,
     required this.presenters,
     required this.child,
-    super.key,
-  });
+  }) : super(key: key);
 
   @override
-  State<ProgressablesResultPresenter<C, S>> createState() => _ProgressablesResultPresenterState<C, S>();
+  _ProgressablesResultPresenterState<C, S> createState() => _ProgressablesResultPresenterState<C, S>();
 }
 
 class _ProgressablesResultPresenterState<C extends Cubit<S>, S> extends State<ProgressablesResultPresenter<C, S>> {
+
   late List<Progressable> lastProgressables;
 
   StreamSubscription<S>? cubitSubscription;
@@ -84,24 +82,24 @@ class _ProgressablesResultPresenterState<C extends Cubit<S>, S> extends State<Pr
   }
 
   void _handleCubitStateChanges(S s) {
-    for (int i = 0; i < widget.presenters.length; i++) {
+    for(int i = 0; i < widget.presenters.length; i++) {
       final presenter = widget.presenters[i];
       final progressable = presenter.progressable(s);
       final lastProgressable = lastProgressables[i];
 
-      if (progressable.success != lastProgressable.success && progressable.success) {
+      if(progressable.success != lastProgressable.success && progressable.success) {
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
           presenter.onSuccess?.call();
         });
       }
 
-      if (progressable.error != lastProgressable.error && progressable.error != null) {
+      if(progressable.error != lastProgressable.error && progressable.error != null) {
         final shouldIgnore = presenter.shouldIgnoreMessage?.call(progressable.error) ?? false;
         presenter.onError?.call(progressable.error);
 
-        if (!shouldIgnore) {
+        if(!shouldIgnore) {
           final message = presenter.errorToMessage?.call(progressable.error);
-          if (message != null) {
+          if(message != null) {
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               // TODO : handle this
               throw StateError('Should ignore message');

@@ -1,4 +1,0 @@
-enum AbleType {
-  fetchable,
-  progressable,
-}
