@@ -1,0 +1,4 @@
+enum AbleType {
+  fetchable,
+  progressable,
+}

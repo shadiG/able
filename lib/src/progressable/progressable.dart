@@ -42,11 +42,8 @@ abstract class Progressable {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Progressable &&
-          runtimeType == other.runtimeType &&
-          state == other.state &&
-          error == other.error;
-  
+      other is Progressable && runtimeType == other.runtimeType && state == other.state && error == other.error;
+
   @override
   String toString() {
     switch (state) {
@@ -62,7 +59,6 @@ abstract class Progressable {
         throw StateError('no case for ${describeEnum(state)}');
     }
   }
-  
 
   AbleState get state => () {
         if (this is IdleProgressable) {
@@ -78,7 +74,6 @@ abstract class Progressable {
         throw StateError('no case for ${describeEnum(this)}');
       }();
 }
-
 
 Progressable toProgressable({dynamic exception, required AbleState state}) {
   switch (state) {
