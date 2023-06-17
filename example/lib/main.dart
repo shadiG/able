@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:able/able.dart';
+import 'package:flutter/material.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -36,10 +37,11 @@ class _MyHomePageState extends State<MyHomePage> {
       _counter++;
     });
   }
+
   @override
   void initState() {
     super.initState();
-    
+
     /*futureAsFetchable(() async{
       int a = 1;
       await Future.delayed(const Duration(seconds: 3));
@@ -48,14 +50,13 @@ class _MyHomePageState extends State<MyHomePage> {
       debugPrint('${event.runtimeType}');
       
     });*/
-    
+
     final f1 = Fetchable.success(45);
-    final f2 = Fetchable.error(new FormatException());
+    final f2 = Fetchable.error(const FormatException());
     final f3 = Fetchable.success("Bonjour");
     final f4 = combine3F(f1: f1, f2: f2, f3: f3);
     final e = f4.state;
     debugPrint('${e}');
-    
   }
 
   @override

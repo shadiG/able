@@ -64,7 +64,7 @@ abstract class Fetchable<D> {
       case AbleState.success:
         return SuccessFetchable<ND>(data: (this as SuccessFetchable<ND>).data);
       case AbleState.error:
-        return Fetchable.error( (this as ErrorFetchable).exception);
+        return Fetchable.error((this as ErrorFetchable).exception);
       default:
         throw StateError('no case for ${describeEnum(state)}');
     }
@@ -96,7 +96,6 @@ abstract class Fetchable<D> {
         throw StateError('no case for ${describeEnum(this)}');
     }
   }
-  
 
   AbleState get state => () {
         if (this is IdleFetchable<D>) {
