@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:able/able.dart';
+import 'package:able/src/utils/exception_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -13,7 +14,7 @@ Widget widgetForFetchable<D>({
   bool treatIdleAsBusy = true,
 }) {
   if (fetchable.idle && !treatIdleAsBusy) {
-    return Container();
+    return const SizedBox();
   }
   if (fetchable.error != null) {
     return buildError(context, fetchable.error);
@@ -101,15 +102,7 @@ class _ProgressablesResultPresenterState<C extends Cubit<S>, S> extends State<Pr
 
         if (!shouldIgnore) {
           final message = presenter.errorToMessage?.call(progressable.error);
-          if (message != null) {
-            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-              // TODO : handle this
-              throw StateError('Should ignore message');
-            });
-          } else {
-            // TODO: handle this
-            throw StateError('Should ignore message');
-          }
+          ExceptionHandler().showError?.call(progressable.error, message);
         }
       }
     }

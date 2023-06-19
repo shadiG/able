@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:able/src/common/able_type.dart';
 import 'package:able/src/fetchable/export.dart';
 import 'package:able/src/progressable/export.dart';
-import 'package:able/src/utils/error_handler.dart';
+import 'package:able/src/utils/exception_handler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 

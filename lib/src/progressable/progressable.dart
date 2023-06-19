@@ -60,22 +60,24 @@ abstract class Progressable {
     }
   }
 
-  AbleState get state => () {
-        if (this is IdleProgressable) {
-          return AbleState.idle;
-        } else if (this is BusyProgressable) {
-          return AbleState.busy;
-        } else if (this is SuccessProgressable) {
-          return AbleState.success;
-        } else if (this is ErrorProgressable) {
-          return AbleState.error;
-        }
+  AbleState get state {
+    return () {
+      if (this is IdleProgressable) {
+        return AbleState.idle;
+      } else if (this is BusyProgressable) {
+        return AbleState.busy;
+      } else if (this is SuccessProgressable) {
+        return AbleState.success;
+      } else if (this is ErrorProgressable) {
+        return AbleState.error;
+      }
 
-        throw StateError('no case for ${describeEnum(this)}');
-      }();
+      throw StateError('no case for ${describeEnum(this)}');
+    }();
+  }
 }
 
-Progressable toProgressable({dynamic exception, required AbleState state}) {
+Progressable toProgressable({required AbleState state, dynamic exception}) {
   switch (state) {
     case AbleState.idle:
       return IdleProgressable();
