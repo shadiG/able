@@ -75,7 +75,7 @@ class ProgressableResultPresenter<S> {
   });
 }
 
-class ProgressablesResultPresenter<C extends Cubit<S>, S> extends StatefulWidget {
+class ProgressablesResultPresenter<C extends AbleCubit<S>, S> extends StatefulWidget {
   final Widget child;
   final List<ProgressableResultPresenter> presenters;
 
@@ -89,7 +89,7 @@ class ProgressablesResultPresenter<C extends Cubit<S>, S> extends StatefulWidget
   State<ProgressablesResultPresenter<C, S>> createState() => _ProgressablesResultPresenterState<C, S>();
 }
 
-class _ProgressablesResultPresenterState<C extends Cubit<S>, S> extends State<ProgressablesResultPresenter<C, S>> {
+class _ProgressablesResultPresenterState<C extends AbleCubit<S>, S> extends State<ProgressablesResultPresenter<C, S>> {
   late List<Progressable> lastProgressables;
 
   StreamSubscription<S>? cubitSubscription;

@@ -136,6 +136,72 @@ Fetchable<(T1, T2, T3, T4, T5, T6, T7)> combine7F<T1, T2, T3, T4, T5, T6, T7>({
   );
 }
 
+Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8)> combine8F<T1, T2, T3, T4, T5, T6, T7, T8>({
+  required Fetchable<T1> f1,
+  required Fetchable<T2> f2,
+  required Fetchable<T3> f3,
+  required Fetchable<T4> f4,
+  required Fetchable<T5> f5,
+  required Fetchable<T6> f6,
+  required Fetchable<T7> f7,
+  required Fetchable<T8> f8,
+}) {
+  return toFetchable<(T1, T2, T3, T4, T5, T6, T7, T8)>(
+    data: f1.success && f2.success && f3.success && f4.success && f5.success && f6.success && f7.success && f8.success
+        ? (f1.data, f2.data, f3.data, f4.data, f5.data, f6.data, f7.data, f8.data)
+        : null,
+    state: f1.state + f2.state + f3.state + f4.state + f5.state + f7.state + f8.state,
+    exception: f1.hasError ||
+            f2.hasError ||
+            f3.hasError ||
+            f4.hasError ||
+            f5.hasError ||
+            f6.hasError ||
+            f7.hasError ||
+            f8.hasError
+        ? f1.error ?? f2.error ?? f3.error ?? f4.error ?? f5.error ?? f6.error ?? f7.error ?? f8.error
+        : null,
+  );
+}
+
+Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8, T9)> combine9F<T1, T2, T3, T4, T5, T6, T7, T8, T9>({
+  required Fetchable<T1> f1,
+  required Fetchable<T2> f2,
+  required Fetchable<T3> f3,
+  required Fetchable<T4> f4,
+  required Fetchable<T5> f5,
+  required Fetchable<T6> f6,
+  required Fetchable<T7> f7,
+  required Fetchable<T8> f8,
+  required Fetchable<T9> f9,
+}) {
+  return toFetchable<(T1, T2, T3, T4, T5, T6, T7, T8, T9)>(
+    data: f1.success &&
+            f2.success &&
+            f3.success &&
+            f4.success &&
+            f5.success &&
+            f6.success &&
+            f7.success &&
+            f8.success &&
+            f9.success
+        ? (f1.data, f2.data, f3.data, f4.data, f5.data, f6.data, f7.data, f8.data, f9.data)
+        : null,
+    state: f1.state + f2.state + f3.state + f4.state + f5.state + f7.state + f8.state + f9.state,
+    exception: f1.hasError ||
+            f2.hasError ||
+            f3.hasError ||
+            f4.hasError ||
+            f5.hasError ||
+            f6.hasError ||
+            f7.hasError ||
+            f8.hasError ||
+            f9.hasError
+        ? f1.error ?? f2.error ?? f3.error ?? f4.error ?? f5.error ?? f6.error ?? f7.error ?? f8.error ?? f9.error
+        : null,
+  );
+}
+
 Stream<Fetchable<(T1, T2)>> combine2FStreams<T1, T2>({
   required Stream<Fetchable<T1>> s1,
   required Stream<Fetchable<T2>> s2,
@@ -242,6 +308,79 @@ Stream<Fetchable<(T1, T2, T3, T4, T5, T6, T7)>> combine7FStreams<T1, T2, T3, T4,
     s7,
     (f1, f2, f3, f4, f5, f6, f7) {
       return combine7F(f1: f1, f2: f2, f3: f3, f4: f4, f5: f5, f6: f6, f7: f7);
+    },
+  );
+}
+
+Stream<Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8)>> combine8FStreams<T1, T2, T3, T4, T5, T6, T7, T8>({
+  required Stream<Fetchable<T1>> s1,
+  required Stream<Fetchable<T2>> s2,
+  required Stream<Fetchable<T3>> s3,
+  required Stream<Fetchable<T4>> s4,
+  required Stream<Fetchable<T5>> s5,
+  required Stream<Fetchable<T6>> s6,
+  required Stream<Fetchable<T7>> s7,
+  required Stream<Fetchable<T8>> s8,
+}) {
+  return CombineLatestStream.combine8<Fetchable<T1>, Fetchable<T2>, Fetchable<T3>, Fetchable<T4>, Fetchable<T5>,
+      Fetchable<T6>, Fetchable<T7>, Fetchable<T8>, Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8)>>(
+    s1,
+    s2,
+    s3,
+    s4,
+    s5,
+    s6,
+    s7,
+    s8,
+    (
+      f1,
+      f2,
+      f3,
+      f4,
+      f5,
+      f6,
+      f7,
+      f8,
+    ) {
+      return combine8F(f1: f1, f2: f2, f3: f3, f4: f4, f5: f5, f6: f6, f7: f7, f8: f8);
+    },
+  );
+}
+
+Stream<Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8, T9)>> combine9FStreams<T1, T2, T3, T4, T5, T6, T7, T8, T9>({
+  required Stream<Fetchable<T1>> s1,
+  required Stream<Fetchable<T2>> s2,
+  required Stream<Fetchable<T3>> s3,
+  required Stream<Fetchable<T4>> s4,
+  required Stream<Fetchable<T5>> s5,
+  required Stream<Fetchable<T6>> s6,
+  required Stream<Fetchable<T7>> s7,
+  required Stream<Fetchable<T8>> s8,
+  required Stream<Fetchable<T9>> s9,
+}) {
+  return CombineLatestStream.combine9<Fetchable<T1>, Fetchable<T2>, Fetchable<T3>, Fetchable<T4>, Fetchable<T5>,
+      Fetchable<T6>, Fetchable<T7>, Fetchable<T8>, Fetchable<T9>, Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8, T9)>>(
+    s1,
+    s2,
+    s3,
+    s4,
+    s5,
+    s6,
+    s7,
+    s8,
+    s9,
+    (
+      f1,
+      f2,
+      f3,
+      f4,
+      f5,
+      f6,
+      f7,
+      f8,
+      f9,
+    ) {
+      return combine9F(f1: f1, f2: f2, f3: f3, f4: f4, f5: f5, f6: f6, f7: f7, f8: f8, f9: f9);
     },
   );
 }

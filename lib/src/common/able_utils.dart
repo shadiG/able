@@ -1,7 +1,17 @@
-import 'package:able/src/fetchable/fetchable.dart';
-import 'package:able/src/fetchable/fetchable_utils.dart';
-import 'package:able/src/progressable/progressable.dart';
+import 'package:able/able.dart';
 import 'package:rxdart/rxdart.dart';
+
+extension ProgressableStreamExtensions on Stream<Progressable> {
+  Stream<Progressable> flatMapOnSuccessP(AbleCubit cubit, Stream<Progressable> Function() mapper) {
+    return flatMap((p) {
+      if (p.success) {
+        return mapper().asBroadcastStream();
+      } else {
+        return Stream.value(p);
+      }
+    });
+  }
+}
 
 extension FetchableStreamExtensions<T> on Stream<Fetchable<T>> {
   Stream<Fetchable<S>> flatMapOnSuccessF<S>(Stream<Fetchable<S>> Function(T value) mapper) {
