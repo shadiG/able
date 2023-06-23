@@ -68,3 +68,31 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
     }));
   }
 }
+
+extension AbleCubitExt<T> on AbleCubit<T> {
+  StreamSubscription executeF(
+    Future<T> Function() future, {
+    required void Function(Fetchable<T> resultF) then,
+    void Function(dynamic e, StackTrace s)? onUnexpectedError,
+    bool Function(dynamic e)? isExpectedError,
+  }) =>
+      futureAsFetchable(future).presentF(
+        this,
+        then,
+        onUnexpectedError: onUnexpectedError,
+        isExpectedError: isExpectedError,
+      );
+
+  StreamSubscription executeP(
+    Future Function() future, {
+    required void Function(Progressable resultP) then,
+    void Function(dynamic e, StackTrace s)? onUnexpectedError,
+    bool Function(dynamic e)? isExpectedError,
+  }) =>
+      futureAsProgressable(future).presentP(
+        this,
+        then,
+        onUnexpectedError: onUnexpectedError,
+        isExpectedError: isExpectedError,
+      );
+}

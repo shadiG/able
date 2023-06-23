@@ -1,31 +1,62 @@
 import 'dart:async';
 
 import 'package:able/able.dart';
-import 'package:able/src/utils/exception_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-Widget widgetForFetchable<D>({
-  required BuildContext context,
-  required Fetchable<D> fetchable,
-  required Widget Function(BuildContext context, D data) buildSuccess,
-  required Widget Function(BuildContext context, dynamic error) buildError,
-  Widget Function(BuildContext context)? buildBusy,
-  bool treatIdleAsBusy = true,
-}) {
-  if (fetchable.idle && !treatIdleAsBusy) {
-    return const SizedBox();
+typedef BuildSuccess<D> = Widget Function(BuildContext context, D data);
+typedef BuildError = Widget Function(BuildContext context, dynamic error);
+typedef BuildBusy = Widget Function(BuildContext context);
+
+abstract class BaseFetchableWidget<D> extends StatelessWidget {
+  final Fetchable<D> fetchable;
+  final BuildSuccess<D> buildSuccess;
+  final BuildError? buildError;
+  final BuildBusy? buildBusy;
+  final bool treatIdleAsBusy;
+
+  const BaseFetchableWidget({
+    required this.fetchable,
+    required this.buildSuccess,
+    required this.buildError,
+    super.key,
+    this.buildBusy,
+    this.treatIdleAsBusy = true,
+  });
+}
+
+class FetchableWidget<D> extends BaseFetchableWidget<D> {
+  const FetchableWidget({
+    required super.fetchable,
+    required super.buildSuccess,
+    super.buildError,
+    super.buildBusy,
+    super.key,
+    super.treatIdleAsBusy = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (fetchable.idle && !treatIdleAsBusy) {
+      return const SizedBox();
+    }
+    if (fetchable.error != null) {
+      if (buildError != null) {
+        return buildError!(context, fetchable.error);
+      } else {
+        return AbleConfigs().errorWidget != null
+            ? AbleConfigs().errorWidget!(context, fetchable.error)
+            : const SizedBox();
+      }
+    }
+    if (fetchable.busy || (fetchable.idle && treatIdleAsBusy)) {
+      return buildBusy != null ? buildBusy!(context) : AbleConfigs().loadingWidget ?? const SizedBox();
+    }
+    if (fetchable.success) {
+      return buildSuccess(context, fetchable.data);
+    }
+    throw StateError('no case for $fetchable');
   }
-  if (fetchable.error != null) {
-    return buildError(context, fetchable.error);
-  }
-  if (fetchable.busy || (fetchable.idle && treatIdleAsBusy)) {
-    return buildBusy != null ? buildBusy(context) : const ActivityIndicator();
-  }
-  if (fetchable.success) {
-    return buildSuccess(context, fetchable.data);
-  }
-  throw StateError('no case for $fetchable');
 }
 
 class ProgressableResultPresenter<S> {
@@ -68,9 +99,11 @@ class _ProgressablesResultPresenterState<C extends Cubit<S>, S> extends State<Pr
     super.initState();
     final cubit = context.read<C>();
     lastProgressables = cubitStateToProgressables(cubit.state);
-    cubitSubscription = context.read<C>().stream.listen((state) {
-      _handleCubitStateChanges(state);
-      lastProgressables = cubitStateToProgressables(state);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      cubitSubscription = context.read<C>().stream.listen((state) {
+        _handleCubitStateChanges(state);
+        lastProgressables = cubitStateToProgressables(state);
+      });
     });
   }
 

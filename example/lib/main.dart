@@ -5,6 +5,28 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'counter/counter_cubit.dart';
 
 void main() {
+  initializeAble(
+    loadingWidget: const Center(child: CircularProgressIndicator()),
+    errorWidget: (context, error) {
+      return Center(
+        child: Text(
+          '$error',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+      );
+    },
+    handleException: (e, s, type) {
+      debugPrint(e.toString());
+    },
+    showError: (context, error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$error'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    },
+  );
   runApp(const MyApp());
 }
 
@@ -51,18 +73,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   const Text(
                     'You have pushed the button this many times:',
                   ),
-                  widgetForFetchable(
-                    context: context,
+                  FetchableWidget(
                     fetchable: counterF,
                     buildSuccess: (context, counter) {
                       return Text(
                         '$counter',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      );
-                    },
-                    buildError: (context, error) {
-                      return Text(
-                        '$error',
                         style: Theme.of(context).textTheme.headlineMedium,
                       );
                     },
