@@ -18,14 +18,7 @@ void main() {
     handleException: (e, s, type) {
       debugPrint(e.toString());
     },
-    showError: (context, error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$error'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    },
+    onError: (error, message) {},
   );
   runApp(const MyApp());
 }
