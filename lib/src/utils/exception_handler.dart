@@ -1,15 +1,15 @@
 import 'package:able/src/common/able_type.dart';
 
 typedef HandleException = void Function(dynamic exception, StackTrace stackTrace, AbleType type);
-typedef ShowError = void Function(dynamic e, String? message);
+typedef OnError = void Function(dynamic e, String? message);
 
 class ExceptionHandler {
-  ShowError? showError;
+  OnError? onError;
 
   static final ExceptionHandler _handler = ExceptionHandler._internal();
 
-  factory ExceptionHandler({ShowError? showError}) {
-    _handler.showError = showError;
+  factory ExceptionHandler({OnError? onError}) {
+    _handler.onError = onError;
     return _handler;
   }
 

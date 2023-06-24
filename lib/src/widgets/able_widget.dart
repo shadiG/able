@@ -135,7 +135,7 @@ class _ProgressablesResultPresenterState<C extends AbleCubit<S>, S> extends Stat
 
         if (!shouldIgnore) {
           final message = presenter.errorToMessage?.call(progressable.error);
-          ExceptionHandler().showError?.call(progressable.error, message);
+          ExceptionHandler().onError?.call(progressable.error, message);
         }
       }
     }

@@ -18,10 +18,9 @@ class AbleConfigs {
   AbleConfigs._internal();
 }
 
-initializeAble(
-    {Widget? loadingWidget, ErrorWidget? errorWidget, HandleException? handleException, ShowError? showError}) {
+initializeAble({Widget? loadingWidget, ErrorWidget? errorWidget, HandleException? handleException, OnError? onError}) {
   AbleConfigs(loadingWidget: loadingWidget, errorWidget: errorWidget);
-  ExceptionHandler(showError: showError);
+  ExceptionHandler(onError: onError);
   if (handleException != null) {
     ExceptionHandler().subscribe(handleException);
   }
