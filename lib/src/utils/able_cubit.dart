@@ -1,9 +1,7 @@
 import 'dart:async';
 
+import 'package:able/able.dart';
 import 'package:able/src/common/able_type.dart';
-import 'package:able/src/fetchable/export.dart';
-import 'package:able/src/progressable/export.dart';
-import 'package:able/src/utils/exception_handler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -27,6 +25,26 @@ class AbleCubit<State> extends Cubit<State> {
     }
     return super.close();
   }
+
+  Stream<Progressable> doIf({
+    required Stream<Progressable> ifP,
+    required Stream<Fetchable<bool>> condition,
+    Stream<Progressable>? elseP,
+  }) {
+    return futureAsProgressable(
+      () async {
+        final doIt = await condition.asFuture(this);
+        if (doIt) {
+          return ifP.asFuture(this);
+        } else {
+          return elseP?.asFuture(this) ?? Future.value(null);
+        }
+      },
+    );
+  }
+
+  Stream<Fetchable<T>> mapFStream<T>(Fetchable<T> Function(State m) s) => stream.startWith(state).map(s);
+  Stream<Progressable> mapPStream<T>(Progressable Function(State m) s) => stream.startWith(state).map(s);
 }
 
 extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
@@ -34,13 +52,14 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
   /// then throws it into our error handler [mainErrorHandler]
   StreamSubscription presentF(
     AbleCubit cubit,
-    void Function(Fetchable<T> F) onData, {
+    Function(Fetchable<T> F)? onData, {
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
+    Stream<Fetchable<bool>>? doIf,
   }) {
     return cubit.closeWithCubit(listen(onData, onError: (e, s) {
       final isExpected = isExpectedError != null && isExpectedError(e);
-      onData(Fetchable.error(e));
+      onData?.call(Fetchable.error(e));
       if (!isExpected) {
         onUnexpectedError?.call(e, s);
         ExceptionHandler().handleException(e, s, AbleType.fetchable);
@@ -48,10 +67,10 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
     }));
   }
 
-  StreamSubscription emitF(
+  StreamSubscription executeF<SP>(
     AbleCubit cubit,
-    Future<T> Function() future, {
-    required void Function(Fetchable<T> resultF) then,
+    Future<SP> Function() future, {
+    void Function(Fetchable<SP> resultF)? then,
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
   }) =>
@@ -63,6 +82,21 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
       );
 
   Stream<Fetchable<T>> takeOnceSuccess() => takeWhileInclusive((m) => !m.success);
+
+  Future<T> asFuture(
+    AbleCubit cubit,
+  ) async {
+    final completer = Completer<T>();
+    takeOnceSuccess().presentF(cubit, (F) {
+      if (F.success) {
+        return completer.complete(F.data);
+      }
+      if (F.hasError) {
+        return completer.completeError(F.error);
+      }
+    });
+    return completer.future;
+  }
 }
 
 extension AbleCubitPStreamExtension on Stream<Progressable> {
@@ -70,13 +104,13 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
   /// then throws it into our error handler [mainErrorHandler]
   StreamSubscription presentP(
     AbleCubit cubit,
-    void Function(Progressable P) onData, {
+    void Function(Progressable P)? onData, {
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
   }) {
     return cubit.closeWithCubit(listen(onData, onError: (e, s) {
       final isExpected = isExpectedError != null && isExpectedError(e);
-      onData(Progressable.error(e));
+      onData?.call(Progressable.error(e));
       if (!isExpected) {
         onUnexpectedError?.call(e, s);
         ExceptionHandler().handleException(e, s, AbleType.fetchable);
@@ -84,10 +118,10 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
     }));
   }
 
-  StreamSubscription emitP(
+  StreamSubscription executeP(
     AbleCubit cubit,
     Future Function() future, {
-    required void Function(Progressable resultP) then,
+    void Function(Progressable resultP)? then,
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
   }) =>
@@ -99,58 +133,92 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
       );
 
   Stream<Progressable> takeOnceSuccess() => takeWhileInclusive((m) => !m.success);
+
+  Future<bool> asFuture(
+    AbleCubit cubit,
+  ) async {
+    final completer = Completer<bool>();
+
+    distinct().takeOnceSuccess().presentP(cubit, (P) {
+      if (P.success) {
+        return completer.complete(true);
+      }
+      if (P.hasError) {
+        return completer.completeError(P.error);
+      }
+    });
+    return completer.future;
+  }
 }
 
 extension AbleCubitExt<T> on AbleCubit<T> {
-  StreamSubscription emitF(
-    Future<T> Function() future, {
-    required void Function(Fetchable<T> resultF) then,
+  StreamSubscription executeF<SP>(
+    Future<SP> Function() future, {
+    void Function(Fetchable<SP> resultF)? then,
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
+    bool takeOnce = true,
   }) =>
-      futureAsFetchable(future).presentF(
+      (takeOnce ? futureAsFetchable(future).takeOnceSuccess() : futureAsFetchable(future)).presentF(
         this,
         then,
         onUnexpectedError: onUnexpectedError,
         isExpectedError: isExpectedError,
       );
 
-  StreamSubscription emitSF<SP>(
+  StreamSubscription executeSF<SP>(
     Stream<Fetchable<SP>> fetchable, {
-    required void Function(Fetchable<SP> resultF) then,
+    void Function(Fetchable<SP> resultF)? then,
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
+    bool takeOnce = true,
   }) =>
-      fetchable.presentF(
+      (takeOnce ? fetchable.takeOnceSuccess() : fetchable).presentF(
         this,
         then,
         onUnexpectedError: onUnexpectedError,
         isExpectedError: isExpectedError,
       );
 
-  StreamSubscription emitP(
+  StreamSubscription executeP(
     Future Function() future, {
-    required void Function(Progressable resultP) then,
+    void Function(Progressable resultP)? then,
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
+    bool takeOnce = true,
   }) =>
-      futureAsProgressable(future).presentP(
+      (takeOnce ? futureAsProgressable(future).takeOnceSuccess() : futureAsProgressable(future)).presentP(
         this,
         then,
         onUnexpectedError: onUnexpectedError,
         isExpectedError: isExpectedError,
       );
 
-  StreamSubscription emitSP(
+  StreamSubscription executeSP(
     Stream<Progressable> progressable, {
-    required void Function(Progressable resultP) then,
+    void Function(Progressable resultP)? then,
+    Stream<Progressable> Function()? onSuccessP,
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
-  }) =>
-      progressable.presentP(
+    bool takeOnce = true,
+  }) {
+    if (onSuccessP != null) {
+      return combine2PStreams(
+        s1: (takeOnce ? progressable.takeOnceSuccess() : progressable),
+        s2: onSuccessP(),
+      ).presentP(
         this,
         then,
         onUnexpectedError: onUnexpectedError,
         isExpectedError: isExpectedError,
       );
+    } else {
+      return (takeOnce ? progressable.takeOnceSuccess() : progressable).presentP(
+        this,
+        then,
+        onUnexpectedError: onUnexpectedError,
+        isExpectedError: isExpectedError,
+      );
+    }
+  }
 }

@@ -12,6 +12,8 @@ extension ProgressableExtension on Progressable {
 
   bool get busy => state == AbleState.busy;
 
+  bool get idleOrBusy => idle || busy;
+
   dynamic get error => () {
         if (state != AbleState.error) {
           return null;

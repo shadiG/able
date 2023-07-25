@@ -13,6 +13,8 @@ extension FetchableExtension<D> on Fetchable<D> {
 
   bool get busy => state == AbleState.busy;
 
+  bool get idleOrBusy => idle || busy;
+
   D get data => () {
         if (state != AbleState.success) {
           throw StateError('Fetchable(${describeEnum(state)}) : can not get data in this state ');
