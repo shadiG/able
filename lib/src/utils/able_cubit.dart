@@ -87,6 +87,7 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
     AbleCubit cubit,
   ) async {
     final completer = Completer<T>();
+
     takeOnceSuccess().presentF(cubit, (F) {
       if (F.success) {
         return completer.complete(F.data);
