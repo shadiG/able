@@ -1,5 +1,4 @@
 import 'package:able/able.dart';
-import 'package:flutter/foundation.dart';
 
 abstract class Progressable {
   Progressable._();
@@ -34,8 +33,6 @@ abstract class Progressable {
         return Fetchable<D>.success(data);
       case AbleState.error:
         return Fetchable.error((this as ErrorProgressable).exception);
-      default:
-        throw StateError('no case for ${describeEnum(this)}');
     }
   }
 
@@ -43,6 +40,9 @@ abstract class Progressable {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Progressable && runtimeType == other.runtimeType && state == other.state && error == other.error;
+
+  @override
+  int get hashCode => Object.hash(runtimeType, state, error);
 
   @override
   String toString() {
@@ -55,8 +55,6 @@ abstract class Progressable {
         return 'Progressable(Success)';
       case AbleState.error:
         return 'Progressable(Error) : ${(this as ErrorProgressable).exception}';
-      default:
-        throw StateError('no case for ${describeEnum(state)}');
     }
   }
 
@@ -72,8 +70,15 @@ abstract class Progressable {
         return AbleState.error;
       }
 
-      throw StateError('no case for ${describeEnum(this)}');
+      throw StateError('no case for $this');
     }();
+  }
+
+  dynamic get error {
+    if (this is ErrorProgressable) {
+      return (this as ErrorProgressable).exception;
+    }
+    return null;
   }
 }
 
@@ -90,8 +95,6 @@ Progressable toProgressable({required AbleState state, dynamic exception}) {
         throw StateError('Progressable(Error): must specify the error');
       }
       return ErrorProgressable(exception: exception);
-    default:
-      throw StateError('no case for ${describeEnum(state)}');
   }
 }
 

@@ -4,15 +4,14 @@ import 'package:able/src/widgets/common.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:flutter/material.dart';
 
-abstract class BaseFetchablesListWidget<D> extends StatelessWidget {
+abstract class BaseFetchableListWidget<D> extends StatelessWidget {
   final Fetchable<BuiltList<D>> fetchable;
   final BuildItem<D> buildItem;
   final BuildError? buildError;
   final BuildBusy? buildBusy;
   final BuildEmpty buildEmpty;
   final bool treatIdleAsBusy;
-
-  const BaseFetchablesListWidget({
+  const BaseFetchableListWidget({
     required this.fetchable,
     required this.buildItem,
     required this.buildError,
@@ -23,14 +22,14 @@ abstract class BaseFetchablesListWidget<D> extends StatelessWidget {
   });
 }
 
-class FetchableListWidget<D> extends BaseFetchablesListWidget<D> {
+class FetchableListWidget<D> extends BaseFetchableListWidget<D> {
   final bool hasScrollBody;
   final bool fillRemaining;
   const FetchableListWidget({
     required super.fetchable,
     required super.buildItem,
+    required super.buildError,
     required super.buildEmpty,
-    super.buildError,
     super.buildBusy,
     super.key,
     super.treatIdleAsBusy = true,
@@ -41,54 +40,39 @@ class FetchableListWidget<D> extends BaseFetchablesListWidget<D> {
   @override
   Widget build(BuildContext context) {
     if (fetchable.idle && !treatIdleAsBusy) {
-      if (fillRemaining) {
-        return const SliverFillRemaining(
-          child: SizedBox(),
-        );
-      } else {
-        return const SliverToBoxAdapter(
-          child: SizedBox(),
-        );
-      }
+      return fillRemaining
+          ? const SliverFillRemaining(child: SizedBox())
+          : const SliverToBoxAdapter(child: SizedBox());
     }
     if (fetchable.error != null) {
-      if (buildError != null) {
-        if (fillRemaining) {
-          return SliverFillRemaining(
-            hasScrollBody: hasScrollBody,
-            child: buildError!(context, fetchable.error),
-          );
-        } else {
-          return SliverToBoxAdapter(
-            child: buildError!(context, fetchable.error),
-          );
-        }
-      } else {
-        if (fillRemaining) {
-          return SliverFillRemaining(
-            hasScrollBody: hasScrollBody,
-            child: AbleConfigs().errorWidget != null
-                ? AbleConfigs().errorWidget!(context, fetchable.error)
-                : const SizedBox(),
-          );
-        } else {
-          return SliverToBoxAdapter(
-            child: AbleConfigs().errorWidget != null
-                ? AbleConfigs().errorWidget!(context, fetchable.error)
-                : const SizedBox(),
-          );
-        }
-      }
+      final errorContent = (buildError != null
+          ? buildError!(context, fetchable.error)
+          : (Able.configs.errorWidget != null
+              ? Able.configs.errorWidget!(context, fetchable.error)
+              : const SizedBox()));
+
+      return fillRemaining
+          ? SliverFillRemaining(
+              hasScrollBody: hasScrollBody,
+              child: errorContent,
+            )
+          : SliverToBoxAdapter(
+              child: errorContent,
+            );
     }
     if (fetchable.busy || (fetchable.idle && treatIdleAsBusy)) {
-      if (fillRemaining) {
-        return SliverFillRemaining(
-            hasScrollBody: hasScrollBody,
-            child: buildBusy != null ? buildBusy!(context) : AbleConfigs().loadingWidget ?? const SizedBox());
-      } else {
-        return SliverToBoxAdapter(
-            child: buildBusy != null ? buildBusy!(context) : AbleConfigs().loadingWidget ?? const SizedBox());
-      }
+      final busyContent = (buildBusy != null
+          ? buildBusy!(context)
+          : Able.configs.loadingWidget ?? const SizedBox());
+
+      return fillRemaining
+          ? SliverFillRemaining(
+              hasScrollBody: hasScrollBody,
+              child: busyContent,
+            )
+          : SliverToBoxAdapter(
+              child: busyContent,
+            );
     }
     if (fetchable.success) {
       final data = fetchable.data;

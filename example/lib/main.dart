@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'counter/counter_cubit.dart';
 
 void main() {
-  initializeAble(
+  Able.initialize(
     loadingWidget: const Center(child: CircularProgressIndicator()),
     errorWidget: (context, error) {
       return Center(

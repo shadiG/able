@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 
 enum AbleState {
   idle,
@@ -18,6 +17,6 @@ extension AbleStateExtension on AbleState {
     } else if (this == AbleState.error || other == AbleState.error) {
       return AbleState.error;
     }
-    throw StateError('no case for this ${describeEnum(this)}');
+    throw StateError('no case for this $name}');
   }
 }

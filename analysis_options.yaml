@@ -22,25 +22,28 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
+    # Enabled by default in flutter_lints, but good to be aware of:
     - always_use_package_imports
-    - always_put_required_named_parameters_first
     - avoid_dynamic_calls
-    - avoid_final_parameters
-    - avoid_unused_constructor_parameters
     - avoid_void_async
     - cancel_subscriptions
     - close_sinks
     - only_throw_errors
     - prefer_final_locals
-    - prefer_final_in_for_each
     - prefer_single_quotes
+    - use_super_parameters
+
+    # Additional recommended rules:
+    - always_put_required_named_parameters_first
+    - avoid_final_parameters
+    - avoid_unused_constructor_parameters
+    - prefer_final_in_for_each
     - sized_box_shrink_expand
     - unnecessary_statements
     - use_colored_box
     - use_decorated_box
     - use_enums
     - use_if_null_to_convert_nulls_to_bools
-    - use_super_parameters
     - unnecessary_await_in_return
     - unnecessary_breaks
     - unnecessary_parenthesis

@@ -1,6 +1,5 @@
 import 'package:able/able.dart';
 import 'package:able/src/progressable/progressable.dart';
-import 'package:flutter/foundation.dart';
 
 abstract class Fetchable<D> {
   Fetchable._();
@@ -35,23 +34,19 @@ abstract class Fetchable<D> {
         return SuccessProgressable();
       case AbleState.error:
         return ErrorProgressable(exception: (this as ErrorFetchable).exception);
-      default:
-        throw StateError('no case for ${describeEnum(this)}');
     }
   }
 
-  Fetchable<ND> mapSuccess<ND>(Function(D data) mapper) {
+  Fetchable<ND> mapSuccess<ND>(ND Function(D data) mapper) {
     switch (state) {
       case AbleState.idle:
         return Fetchable.idle();
       case AbleState.busy:
         return Fetchable.busy();
       case AbleState.success:
-        return SuccessFetchable<ND>(data: mapper((this as SuccessFetchable<ND>).data as D));
+        return SuccessFetchable<ND>(data: mapper((this as SuccessFetchable<D>).data));
       case AbleState.error:
         return Fetchable.error((this as ErrorFetchable).exception);
-      default:
-        throw StateError('no case for ${describeEnum(state)}');
     }
   }
 
@@ -62,24 +57,43 @@ abstract class Fetchable<D> {
       case AbleState.busy:
         return Fetchable.busy();
       case AbleState.success:
-        return SuccessFetchable<ND>(data: (this as SuccessFetchable<ND>).data);
+        return SuccessFetchable<ND>(data: (this as SuccessFetchable<D>).data as ND);
       case AbleState.error:
         return Fetchable.error((this as ErrorFetchable).exception);
-      default:
-        throw StateError('no case for ${describeEnum(state)}');
     }
   }
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Fetchable &&
-          runtimeType == other.runtimeType &&
-          this.state == other.state &&
-          success == other.success &&
-          ((this is SuccessFetchable && other is SuccessFetchable) && data == other.data) &&
-          hasError == other.hasError &&
-          error == other.error;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
+
+    return other is Fetchable<D> && other.state == state && () {
+      switch (state) {
+        case AbleState.success:
+          return (this as SuccessFetchable<D>).data == (other as SuccessFetchable<D>).data;
+        case AbleState.error:
+          return (this as ErrorFetchable<D>).exception == (other as ErrorFetchable<D>).exception;
+        case AbleState.idle:
+        case AbleState.busy:
+          return true;
+      }
+    }();
+  }
+
+  @override
+  int get hashCode {
+    switch (state) {
+      case AbleState.idle:
+        return Object.hash(runtimeType, state);
+      case AbleState.busy:
+        return Object.hash(runtimeType, state);
+      case AbleState.success:
+        return Object.hash(runtimeType, state, (this as SuccessFetchable<D>).data);
+      case AbleState.error:
+        return Object.hash(runtimeType, state, (this as ErrorFetchable<D>).exception);
+    }
+  }
 
   @override
   String toString() {
@@ -92,27 +106,24 @@ abstract class Fetchable<D> {
         return 'Fetchable(Success) : ${(this as SuccessFetchable<D>).data}';
       case AbleState.error:
         return 'Fetchable(Error) : ${(this as ErrorFetchable<D>).exception}';
-      default:
-        throw StateError('no case for ${describeEnum(this)}');
     }
   }
 
-  AbleState get state => () {
-        if (this is IdleFetchable<D>) {
-          return AbleState.idle;
-        } else if (this is BusyFetchable<D>) {
-          return AbleState.busy;
-        } else if (this is SuccessFetchable<D>) {
-          return AbleState.success;
-        } else if (this is ErrorFetchable<D>) {
-          return AbleState.error;
-        }
-
-        throw StateError('no case for ${describeEnum(runtimeType)}');
-      }();
+  AbleState get state {
+    if (this is IdleFetchable<D>) {
+      return AbleState.idle;
+    } else if (this is BusyFetchable<D>) {
+      return AbleState.busy;
+    } else if (this is SuccessFetchable<D>) {
+      return AbleState.success;
+    } else if (this is ErrorFetchable<D>) {
+      return AbleState.error;
+    }
+    throw StateError('Unknown Fetchable state for $runtimeType');
+  }
 }
 
-Fetchable<D> toFetchable<D>({D? data, dynamic exception, required AbleState state}) {
+Fetchable<D> toFetchable<D>({required AbleState state, D? data, dynamic exception}) {
   switch (state) {
     case AbleState.idle:
       return IdleFetchable<D>();
@@ -120,16 +131,14 @@ Fetchable<D> toFetchable<D>({D? data, dynamic exception, required AbleState stat
       return BusyFetchable<D>();
     case AbleState.success:
       if (data == null) {
-        throw StateError('Fetchable(Success): must specify the data');
+        throw ArgumentError.notNull('data');
       }
       return SuccessFetchable<D>(data: data);
     case AbleState.error:
       if (exception == null) {
-        throw StateError('Fetchable(Error): must specify the error');
+        throw ArgumentError.notNull('exception');
       }
       return ErrorFetchable<D>(exception: exception);
-    default:
-      throw StateError('no case for ${describeEnum(state)}');
   }
 }
 

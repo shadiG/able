@@ -39,13 +39,15 @@ class FetchableWidget<D> extends BaseFetchableWidget<D> {
       if (buildError != null) {
         return buildError!(context, fetchable.error);
       } else {
-        return AbleConfigs().errorWidget != null
-            ? AbleConfigs().errorWidget!(context, fetchable.error)
+        return Able.configs.errorWidget != null
+            ? Able.configs.errorWidget!(context, fetchable.error)
             : const SizedBox();
       }
     }
     if (fetchable.busy || (fetchable.idle && treatIdleAsBusy)) {
-      return buildBusy != null ? buildBusy!(context) : AbleConfigs().loadingWidget ?? const SizedBox();
+      return buildBusy != null
+          ? buildBusy!(context)
+          : Able.configs.loadingWidget ?? const SizedBox();
     }
     if (fetchable.success) {
       return buildSuccess(context, fetchable.data);
