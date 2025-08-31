@@ -43,8 +43,13 @@ class AbleCubit<State> extends Cubit<State> {
     );
   }
 
-  Stream<Fetchable<T>> mapFStream<T>(Fetchable<T> Function(State m) s) => stream.startWith(state).map(s);
-  Stream<Progressable> mapPStream<T>(Progressable Function(State m) s) => stream.startWith(state).map(s);
+  Stream<Fetchable<T>> mapFStream<T>(Fetchable<T> Function(State m) s) =>
+      stream.startWith(state).map(s);
+
+  Stream<Progressable> mapPStream<T>(Progressable Function(State m) s) =>
+      stream.startWith(state).map(s);
+
+  void rebuild(State state) => emit(state);
 }
 
 extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
@@ -81,7 +86,8 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
         isExpectedError: isExpectedError,
       );
 
-  Stream<Fetchable<T>> takeOnceSuccess() => takeWhileInclusive((m) => !m.success);
+  Stream<Fetchable<T>> takeOnceSuccess() =>
+      takeWhileInclusive((m) => !m.success);
 
   Future<T> asFuture(
     AbleCubit cubit,
@@ -133,7 +139,8 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
         isExpectedError: isExpectedError,
       );
 
-  Stream<Progressable> takeOnceSuccess() => takeWhileInclusive((m) => !m.success);
+  Stream<Progressable> takeOnceSuccess() =>
+      takeWhileInclusive((m) => !m.success);
 
   Future<bool> asFuture(
     AbleCubit cubit,
@@ -160,7 +167,10 @@ extension AbleCubitExt<T> on AbleCubit<T> {
     bool Function(dynamic e)? isExpectedError,
     bool takeOnce = true,
   }) =>
-      (takeOnce ? futureAsFetchable(future).takeOnceSuccess() : futureAsFetchable(future)).presentF(
+      (takeOnce
+              ? futureAsFetchable(future).takeOnceSuccess()
+              : futureAsFetchable(future))
+          .presentF(
         this,
         then,
         onUnexpectedError: onUnexpectedError,
@@ -188,7 +198,10 @@ extension AbleCubitExt<T> on AbleCubit<T> {
     bool Function(dynamic e)? isExpectedError,
     bool takeOnce = true,
   }) =>
-      (takeOnce ? futureAsProgressable(future).takeOnceSuccess() : futureAsProgressable(future)).presentP(
+      (takeOnce
+              ? futureAsProgressable(future).takeOnceSuccess()
+              : futureAsProgressable(future))
+          .presentP(
         this,
         then,
         onUnexpectedError: onUnexpectedError,
@@ -214,7 +227,8 @@ extension AbleCubitExt<T> on AbleCubit<T> {
         isExpectedError: isExpectedError,
       );
     } else {
-      return (takeOnce ? progressable.takeOnceSuccess() : progressable).presentP(
+      return (takeOnce ? progressable.takeOnceSuccess() : progressable)
+          .presentP(
         this,
         then,
         onUnexpectedError: onUnexpectedError,
