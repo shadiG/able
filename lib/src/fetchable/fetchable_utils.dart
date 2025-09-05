@@ -22,6 +22,8 @@ extension FetchableExtension<D> on Fetchable<D> {
         return (this as SuccessFetchable<D>).data;
       }();
 
+  D? get dataOrNull => state == AbleState.success ? (this as SuccessFetchable<D>).data : null;
+
   dynamic get error => () {
         if (state != AbleState.error) {
           return null;
