@@ -1,0 +1,423 @@
+{
+  "$schema_note": "See knowledge/graph/README.md for the schema and relation vocabulary.",
+  "nodes": [
+    {
+      "id": "able-state",
+      "type": "concept",
+      "name": "AbleState",
+      "path": "knowledge/concepts/AbleState.md",
+      "summary": "The shared idle/busy/success/error enum and its + combinator."
+    },
+    {
+      "id": "fetchable",
+      "type": "concept",
+      "name": "Fetchable<D>",
+      "path": "knowledge/concepts/Fetchable.md",
+      "summary": "Immutable async-state value type for a result-bearing operation."
+    },
+    {
+      "id": "progressable",
+      "type": "concept",
+      "name": "Progressable",
+      "path": "knowledge/concepts/Progressable.md",
+      "summary": "Immutable async-state value type for a result-less action."
+    },
+    {
+      "id": "able-cubit",
+      "type": "concept",
+      "name": "AbleCubit",
+      "path": "knowledge/concepts/AbleCubit.md",
+      "summary": "Base Cubit subclass with execute*/present*/rebuild/mapFStream/mapPStream."
+    },
+    {
+      "id": "able-configs",
+      "type": "concept",
+      "name": "AbleConfigs",
+      "path": "knowledge/concepts/AbleConfigs.md",
+      "summary": "Able.initialize()/Able.configs global loading/error widget + handler configuration."
+    },
+    {
+      "id": "exception-handler",
+      "type": "concept",
+      "name": "ExceptionHandler",
+      "path": "knowledge/concepts/ExceptionHandler.md",
+      "summary": "Shared error-routing singleton. Documents two verified defects."
+    },
+    {
+      "id": "fetchable-widget",
+      "type": "concept",
+      "name": "FetchableWidget",
+      "path": "knowledge/concepts/FetchableWidget.md",
+      "summary": "Renders a Fetchable's busy/error/success states."
+    },
+    {
+      "id": "fetchable-list-widget",
+      "type": "concept",
+      "name": "FetchableListWidget",
+      "path": "knowledge/concepts/FetchableListWidget.md",
+      "summary": "Sliver counterpart of FetchableWidget for Fetchable<BuiltList<D>>."
+    },
+    {
+      "id": "progressables-result-presenter",
+      "type": "concept",
+      "name": "ProgressablesResultPresenter",
+      "path": "knowledge/concepts/ProgressablesResultPresenter.md",
+      "summary": "Fires onSuccess/onError once per Progressable transition."
+    },
+    {
+      "id": "business-cubit",
+      "type": "concept",
+      "name": "BusinessCubit (convention)",
+      "path": "knowledge/concepts/BusinessCubit.md",
+      "summary": "Consuming-app convention: long-lived, app-scoped AbleCubit holding canonical data."
+    },
+    {
+      "id": "view-cubit",
+      "type": "concept",
+      "name": "ViewCubit (convention)",
+      "path": "knowledge/concepts/ViewCubit.md",
+      "summary": "Consuming-app convention: per-screen AbleCubit mirroring business-cubit fields."
+    },
+    {
+      "id": "rule-architecture",
+      "type": "rule",
+      "name": "architecture.md",
+      "path": "rules/architecture.md",
+      "summary": "Package layout, dependency graph, global configuration, consuming-app conventions."
+    },
+    {
+      "id": "rule-state-management",
+      "type": "rule",
+      "name": "state-management.md",
+      "path": "rules/state-management.md",
+      "summary": "The four-state model, immutability, combinators, field-naming convention."
+    },
+    {
+      "id": "rule-cubits",
+      "type": "rule",
+      "name": "cubits.md",
+      "path": "rules/cubits.md",
+      "summary": "AbleCubit API: rebuild, mapFStream/mapPStream, execute*/present*, .distinct()."
+    },
+    {
+      "id": "rule-fetchable",
+      "type": "rule",
+      "name": "fetchable.md",
+      "path": "rules/fetchable.md",
+      "summary": "Full Fetchable<D>/Progressable API reference, including the combine7F/8F/9F bug."
+    },
+    {
+      "id": "rule-patterns",
+      "type": "rule",
+      "name": "patterns.md",
+      "path": "rules/patterns.md",
+      "summary": "End-to-end recipes: bootstrapping, cubit-writing, rendering, real-world usage patterns."
+    },
+    {
+      "id": "rule-anti-patterns",
+      "type": "rule",
+      "name": "anti-patterns.md",
+      "path": "rules/anti-patterns.md",
+      "summary": "Concrete mistakes to avoid, with the corrected BlocListener nuance."
+    },
+    {
+      "id": "adr-001",
+      "type": "decision",
+      "name": "ADR-001: Stream-based async state",
+      "path": "knowledge/decisions/ADR-001-stream-based-async-state.md",
+      "summary": "Why async state is an immutable value type carried over a Stream."
+    },
+    {
+      "id": "adr-002",
+      "type": "decision",
+      "name": "ADR-002: Separate Fetchable/Progressable types",
+      "path": "knowledge/decisions/ADR-002-separate-fetchable-progressable-types.md",
+      "summary": "Why Fetchable and Progressable are two hierarchies instead of one."
+    },
+    {
+      "id": "adr-003",
+      "type": "decision",
+      "name": "ADR-003: dynamic-typed errors",
+      "path": "knowledge/decisions/ADR-003-dynamic-typed-errors.md",
+      "summary": "Why .error/exception is dynamic instead of Exception/Object."
+    },
+    {
+      "id": "adr-004",
+      "type": "decision",
+      "name": "ADR-004: Centralized ExceptionHandler",
+      "path": "knowledge/decisions/ADR-004-centralized-exception-handling.md",
+      "summary": "Why errors route through one configurable ExceptionHandler singleton."
+    },
+    {
+      "id": "adr-005",
+      "type": "decision",
+      "name": "ADR-005: rebuild() alias for emit()",
+      "path": "knowledge/decisions/ADR-005-rebuild-alias-for-emit.md",
+      "summary": "Why AbleCubit.rebuild exists as a naming convention over Cubit.emit."
+    }
+  ],
+  "edges": [
+    {
+      "from": "fetchable",
+      "relation": "depends_on",
+      "to": "able-state"
+    },
+    {
+      "from": "progressable",
+      "relation": "depends_on",
+      "to": "able-state"
+    },
+    {
+      "from": "able-cubit",
+      "relation": "depends_on",
+      "to": "fetchable"
+    },
+    {
+      "from": "able-cubit",
+      "relation": "depends_on",
+      "to": "progressable"
+    },
+    {
+      "from": "fetchable-widget",
+      "relation": "depends_on",
+      "to": "fetchable"
+    },
+    {
+      "from": "fetchable-list-widget",
+      "relation": "depends_on",
+      "to": "fetchable"
+    },
+    {
+      "from": "progressables-result-presenter",
+      "relation": "depends_on",
+      "to": "progressable"
+    },
+    {
+      "from": "progressables-result-presenter",
+      "relation": "depends_on",
+      "to": "able-cubit"
+    },
+    {
+      "from": "view-cubit",
+      "relation": "depends_on",
+      "to": "business-cubit",
+      "note": "a view cubit takes a business cubit as a constructor dependency and mirrors its fields"
+    },
+    {
+      "from": "able-cubit",
+      "relation": "uses",
+      "to": "exception-handler",
+      "note": "presentF/presentP forward unexpected errors to ExceptionHandler().handleException(...)"
+    },
+    {
+      "from": "able-configs",
+      "relation": "uses",
+      "to": "exception-handler",
+      "note": "Able.initialize constructs/feeds the ExceptionHandler singleton"
+    },
+    {
+      "from": "fetchable-widget",
+      "relation": "uses",
+      "to": "able-configs",
+      "note": "falls back to Able.configs.loadingWidget/errorWidget when buildBusy/buildError are omitted"
+    },
+    {
+      "from": "fetchable-list-widget",
+      "relation": "uses",
+      "to": "able-configs",
+      "note": "same fallback as FetchableWidget"
+    },
+    {
+      "from": "progressables-result-presenter",
+      "relation": "uses",
+      "to": "exception-handler",
+      "note": "reads ExceptionHandler().onError for unsuppressed errors — see ExceptionHandler known defect 1"
+    },
+    {
+      "from": "business-cubit",
+      "relation": "extends",
+      "to": "able-cubit"
+    },
+    {
+      "from": "view-cubit",
+      "relation": "extends",
+      "to": "able-cubit"
+    },
+    {
+      "from": "fetchable",
+      "relation": "used_by",
+      "to": "business-cubit",
+      "note": "F-suffixed fields"
+    },
+    {
+      "from": "progressable",
+      "relation": "used_by",
+      "to": "business-cubit",
+      "note": "P-suffixed fields"
+    },
+    {
+      "from": "fetchable",
+      "relation": "used_by",
+      "to": "view-cubit",
+      "note": "F-suffixed fields"
+    },
+    {
+      "from": "progressable",
+      "relation": "used_by",
+      "to": "view-cubit",
+      "note": "P-suffixed fields"
+    },
+    {
+      "from": "fetchable-widget",
+      "relation": "used_by",
+      "to": "view-cubit",
+      "note": "renders a view cubit's F fields"
+    },
+    {
+      "from": "progressables-result-presenter",
+      "relation": "used_by",
+      "to": "view-cubit",
+      "note": "renders a view cubit's P-field transitions"
+    },
+    {
+      "from": "able-state",
+      "relation": "governed_by",
+      "to": "rule-state-management"
+    },
+    {
+      "from": "fetchable",
+      "relation": "governed_by",
+      "to": "rule-fetchable"
+    },
+    {
+      "from": "fetchable",
+      "relation": "governed_by",
+      "to": "rule-state-management"
+    },
+    {
+      "from": "progressable",
+      "relation": "governed_by",
+      "to": "rule-fetchable"
+    },
+    {
+      "from": "progressable",
+      "relation": "governed_by",
+      "to": "rule-state-management"
+    },
+    {
+      "from": "able-cubit",
+      "relation": "governed_by",
+      "to": "rule-cubits"
+    },
+    {
+      "from": "able-configs",
+      "relation": "governed_by",
+      "to": "rule-architecture"
+    },
+    {
+      "from": "exception-handler",
+      "relation": "governed_by",
+      "to": "rule-architecture"
+    },
+    {
+      "from": "fetchable-widget",
+      "relation": "governed_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "fetchable-list-widget",
+      "relation": "governed_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "progressables-result-presenter",
+      "relation": "governed_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "progressables-result-presenter",
+      "relation": "governed_by",
+      "to": "rule-anti-patterns"
+    },
+    {
+      "from": "business-cubit",
+      "relation": "documented_by",
+      "to": "rule-architecture"
+    },
+    {
+      "from": "business-cubit",
+      "relation": "documented_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "view-cubit",
+      "relation": "documented_by",
+      "to": "rule-architecture"
+    },
+    {
+      "from": "view-cubit",
+      "relation": "documented_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "fetchable",
+      "relation": "decided_by",
+      "to": "adr-001"
+    },
+    {
+      "from": "fetchable",
+      "relation": "decided_by",
+      "to": "adr-002"
+    },
+    {
+      "from": "fetchable",
+      "relation": "decided_by",
+      "to": "adr-003"
+    },
+    {
+      "from": "progressable",
+      "relation": "decided_by",
+      "to": "adr-001"
+    },
+    {
+      "from": "progressable",
+      "relation": "decided_by",
+      "to": "adr-002"
+    },
+    {
+      "from": "progressable",
+      "relation": "decided_by",
+      "to": "adr-003"
+    },
+    {
+      "from": "able-cubit",
+      "relation": "decided_by",
+      "to": "adr-001"
+    },
+    {
+      "from": "able-cubit",
+      "relation": "decided_by",
+      "to": "adr-004"
+    },
+    {
+      "from": "able-cubit",
+      "relation": "decided_by",
+      "to": "adr-005"
+    },
+    {
+      "from": "able-configs",
+      "relation": "decided_by",
+      "to": "adr-004"
+    },
+    {
+      "from": "exception-handler",
+      "relation": "decided_by",
+      "to": "adr-004"
+    },
+    {
+      "from": "progressables-result-presenter",
+      "relation": "decided_by",
+      "to": "adr-004"
+    }
+  ]
+}
