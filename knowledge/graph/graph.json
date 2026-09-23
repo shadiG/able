@@ -13,7 +13,7 @@
       "type": "concept",
       "name": "Fetchable<D>",
       "path": "knowledge/concepts/Fetchable.md",
-      "summary": "Immutable async-state value type for a result-bearing operation."
+      "summary": "Immutable async-state value type for a result-bearing operation; busy/error can keep earlier data."
     },
     {
       "id": "progressable",
@@ -55,7 +55,7 @@
       "type": "concept",
       "name": "FetchableListWidget",
       "path": "knowledge/concepts/FetchableListWidget.md",
-      "summary": "Sliver counterpart of FetchableWidget for Fetchable<BuiltList<D>>."
+      "summary": "Sliver list for Fetchable<BuiltList<D>>, with FetchableSliverGrid and box FetchableListView siblings."
     },
     {
       "id": "progressables-result-presenter",
@@ -77,6 +77,27 @@
       "name": "ViewCubit (convention)",
       "path": "knowledge/concepts/ViewCubit.md",
       "summary": "Consuming-app convention: per-screen AbleCubit mirroring business-cubit fields."
+    },
+    {
+      "id": "paging",
+      "type": "concept",
+      "name": "Paging",
+      "path": "knowledge/concepts/Paging.md",
+      "summary": "PagedList/PageResult, executeNextPage and FetchablePagedListWidget for page-by-page lists (0.2.0)."
+    },
+    {
+      "id": "able-observer",
+      "type": "concept",
+      "name": "AbleObserver",
+      "path": "knowledge/concepts/AbleObserver.md",
+      "summary": "App-wide hook on every cubit's rebuilds and execute* errors (0.2.0)."
+    },
+    {
+      "id": "able-lints",
+      "type": "concept",
+      "name": "AbleLints",
+      "path": "knowledge/concepts/AbleLints.md",
+      "summary": "The able_lints analyzer plugin: three warnings for the most common Able mistakes (0.2.0)."
     },
     {
       "id": "rule-architecture",
@@ -111,7 +132,7 @@
       "type": "rule",
       "name": "patterns.md",
       "path": "rules/patterns.md",
-      "summary": "End-to-end recipes 1-20: bootstrapping, cubit-writing, rendering, reloadable business loads, derived and chained view-cubit fields, testing."
+      "summary": "End-to-end recipes 1-27: bootstrapping, cubits, rendering, reloads that keep data, paging, keyed actions, observer, lints, testing."
     },
     {
       "id": "rule-anti-patterns",
@@ -161,6 +182,20 @@
       "name": "ADR-006: Errors win when combining states",
       "path": "knowledge/decisions/ADR-006-errors-win-when-combining.md",
       "summary": "Why AbleState.+ lets an error take precedence over idle and busy (0.1.0)."
+    },
+    {
+      "id": "adr-007",
+      "type": "decision",
+      "name": "ADR-007: Kept data on busy and error",
+      "path": "knowledge/decisions/ADR-007-kept-data-on-busy-and-error.md",
+      "summary": "Why a reload keeps data on a busy/error Fetchable instead of a fifth state (0.2.0)."
+    },
+    {
+      "id": "adr-008",
+      "type": "decision",
+      "name": "ADR-008: Lints as an analyzer plugin",
+      "path": "knowledge/decisions/ADR-008-lints-as-analyzer-plugin.md",
+      "summary": "Why able_lints uses analysis_server_plugin rather than custom_lint (0.2.0)."
     },
     {
       "id": "example-counter",
@@ -540,6 +575,96 @@
       "from": "progressable",
       "relation": "decided_by",
       "to": "adr-006"
+    },
+    {
+      "from": "paging",
+      "relation": "depends_on",
+      "to": "fetchable"
+    },
+    {
+      "from": "paging",
+      "relation": "depends_on",
+      "to": "able-cubit",
+      "note": "executeNextPage is an extension on AbleCubit and runs through executeSF"
+    },
+    {
+      "from": "paging",
+      "relation": "uses",
+      "to": "able-configs",
+      "note": "FetchablePagedListWidget falls back to the global loading/error widgets"
+    },
+    {
+      "from": "paging",
+      "relation": "governed_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "paging",
+      "relation": "decided_by",
+      "to": "adr-007"
+    },
+    {
+      "from": "fetchable",
+      "relation": "decided_by",
+      "to": "adr-007"
+    },
+    {
+      "from": "fetchable-widget",
+      "relation": "decided_by",
+      "to": "adr-007"
+    },
+    {
+      "from": "fetchable-list-widget",
+      "relation": "decided_by",
+      "to": "adr-007"
+    },
+    {
+      "from": "able-cubit",
+      "relation": "uses",
+      "to": "able-observer",
+      "note": "rebuild and presentF/presentP report to Able.observer"
+    },
+    {
+      "from": "able-configs",
+      "relation": "uses",
+      "to": "able-observer",
+      "note": "Able.initialize(observer:) and Able.resetForTest"
+    },
+    {
+      "from": "able-observer",
+      "relation": "depends_on",
+      "to": "able-cubit"
+    },
+    {
+      "from": "able-observer",
+      "relation": "governed_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "able-observer",
+      "relation": "decided_by",
+      "to": "adr-004"
+    },
+    {
+      "from": "able-lints",
+      "relation": "governed_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "able-lints",
+      "relation": "governed_by",
+      "to": "rule-anti-patterns"
+    },
+    {
+      "from": "able-lints",
+      "relation": "decided_by",
+      "to": "adr-008"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "uses",
+      "to": "able-lints",
+      "note": "enabled in analysis_options.yaml"
     }
   ]
 }

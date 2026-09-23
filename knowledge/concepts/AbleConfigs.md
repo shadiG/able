@@ -6,6 +6,10 @@
 `Able.configs`. `Able.initialize` also configures the [[ExceptionHandler]] singleton
 (`handleException`/`onError`) as a side effect.
 
+Since 0.2.0 `Able.initialize` also takes an `observer:` (the static `Able.observer`, see
+[[AbleObserver]]), and `Able.resetForTest()` forgets the configuration, the observer and every
+exception handler, so a test can initialize again.
+
 ## Why it exists
 So every [[FetchableWidget]]/[[FetchableListWidget]] doesn't need its own `buildBusy`/`buildError`
 at every call site, and so the app's crash-reporting/toast wiring for unexpected errors lives in

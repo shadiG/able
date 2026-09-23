@@ -6,6 +6,10 @@ but produces no result payload." Same four-case shape as [[Fetchable]] (idle/bus
 minus the `data` field. Concrete subclasses: `IdleProgressable`, `BusyProgressable`,
 `SuccessProgressable`, `ErrorProgressable`.
 
+Since 0.2.0 a busy `Progressable` can carry a `progress` from 0 to 1
+(`futureAsProgressableWithProgress`), and every `Progressable` has `when`/`maybeWhen`.
+`ProgressableButton` renders one as a button that is disabled with a spinner while busy.
+
 ## Why it exists
 Not every async operation returns a value worth modeling as a `Fetchable<D>` — save, delete,
 sign-in, launch-an-external-app. `Progressable` gives those the same busy/error vocabulary,

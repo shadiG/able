@@ -36,14 +36,20 @@ Package-internal (defined in `lib/src/**`):
   error-routing defects fixed in 0.1.0).
 - `concepts/FetchableWidget.md`, `concepts/FetchableListWidget.md` — rendering.
 - `concepts/ProgressablesResultPresenter.md` — one-shot success/error side effects.
+- `concepts/Paging.md` — `PagedList`, `executeNextPage`, `FetchablePagedListWidget`.
+- `concepts/AbleObserver.md` — app-wide hook on every cubit's rebuilds and errors.
+
+Tooling (separate package in this repository):
+- `concepts/AbleLints.md` — the `able_lints` analyzer plugin.
 
 Consuming-app conventions (observed in practice, not package classes):
 - `concepts/BusinessCubit.md`, `concepts/ViewCubit.md` — the two-tier cubit pattern.
 
 ## Known gaps (not decisions — do not treat as intentional)
 
-- **Test coverage is still partial.** `test/regression_test.dart` covers the 0.1.0 bug fixes and
-  `test/progressables_result_presenter_test.dart` the presenter's typing. Most other behavior is
-  exercised only by `example/country_listing/test/`.
+- **Test coverage is still partial.** `test/regression_test.dart` covers the 0.1.0 bug fixes,
+  `test/features_test.dart` the 0.2.0 features, and `test/progressables_result_presenter_test.dart`
+  the presenter's typing. Older APIs (`doIf`, most `combineNF` arities) are exercised only
+  indirectly.
 
 These are flagged, not silently fixed, here — see the session's final report for why.

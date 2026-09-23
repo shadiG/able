@@ -36,3 +36,7 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+plugins:
+  able_lints:
+    path: ../../able_lints

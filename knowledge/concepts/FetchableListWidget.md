@@ -5,6 +5,11 @@
 of [[FetchableWidget]] for a `Fetchable<BuiltList<D>>`: busy/error/empty states render as
 `SliverFillRemaining`/`SliverToBoxAdapter`, success renders a `SliverList`.
 
+Siblings in the same file (0.2.0) share its busy/error/empty handling: `FetchableSliverGrid`
+(a sliver grid) and `FetchableListView` (a box `ListView`). `FetchableListWidget` also takes a
+`separatorBuilder`. All render kept data while busy (`showLatestDataWhileBusy`). For paged lists
+see [[Paging]].
+
 ## Why it exists
 To cover the common "fetch a list, render one row per item" case with the same busy/error handling
 as [[FetchableWidget]], without hand-writing a `SliverList` plus manual state branching.
@@ -21,10 +26,10 @@ Must be a direct child of a `CustomScrollView`'s `slivers:` — it returns a sli
 widget.
 
 ## Which rules govern it
-- `rules/patterns.md` item 6.
+- `rules/patterns.md` items 6 and 21.
 
 ## Which decisions affect it
-None specific.
+- [[ADR-007-kept-data-on-busy-and-error]] — rendering kept data while busy.
 
 ## Examples of correct usage
 See `rules/patterns.md` item 6.

@@ -6,6 +6,10 @@ be idle, busy, successful (carrying data of type `D`), or failed (carrying a `dy
 Concrete subclasses: `IdleFetchable<D>`, `BusyFetchable<D>`, `SuccessFetchable<D>`,
 `ErrorFetchable<D>`.
 
+Since 0.2.0 a busy or error `Fetchable` can also keep the data of an earlier success
+(`toRefreshing`, `keepingDataOf`, `latestData`, `refreshing`), and every `Fetchable` has
+`when`/`maybeWhen`. See [[ADR-007-kept-data-on-busy-and-error]].
+
 ## Why it exists
 To eliminate hand-rolled `isLoading`/`error`/`data` field triples on cubit state (see
 `rules/anti-patterns.md` #2) by giving every "has a result" piece of async state one field of one
@@ -30,6 +34,7 @@ type, with structural equality, combinators, and dedicated widgets.
 
 ## Which rules govern it
 - `rules/fetchable.md` — full API reference.
+- `rules/patterns.md` item 21 — reloading without a spinner flash.
 - `rules/state-management.md` — the four-state model and field-naming convention.
 - `rules/patterns.md` items 11, 12, 14 — deriving fields, widget-level combining,
   `value.asFetchable()` as the everyday setter.
@@ -40,6 +45,7 @@ type, with structural equality, combinators, and dedicated widgets.
 - [[ADR-002-separate-fetchable-progressable-types]] — why `Fetchable` and `Progressable` are two
   types rather than one.
 - [[ADR-003-dynamic-typed-errors]] — why `.error`/`exception` is `dynamic`.
+- [[ADR-007-kept-data-on-busy-and-error]] — why busy/error can keep data instead of a fifth state.
 
 ## Examples of correct usage
 See `rules/patterns.md` items 2, 5, 11, 12, 14.

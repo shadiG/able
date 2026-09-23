@@ -29,6 +29,22 @@ a list of contacts, a user profile, a computed value.
 - `.cast<ND>()` → unsafe payload cast (`as ND`), for when you know the runtime type matches.
 - Extension getters (`fetchable_utils.dart`): `.success`, `.hasError`, `.idle`, `.busy`,
   `.idleOrBusy`, `.data` (throws `StateError` off-success), `.dataOrNull`, `.error`.
+- `.when(idle:, busy:, success:, error:)` → calls the callback for the current state; every case
+  is required, so it is exhaustive. `.maybeWhen(orElse:, ...)` for a subset. Prefer these to an
+  `if`/`else` chain over the getters when every state produces a value. (0.2.0)
+
+### Keeping data while busy or failed (0.2.0)
+
+A busy or error `Fetchable` can carry the data of an earlier success, so a reload or a failed
+next page doesn't blank the screen. See [[patterns]] item 21 and
+[[ADR-007-kept-data-on-busy-and-error]].
+
+- `.toRefreshing()` → busy, keeping this value's data (or the data it already kept).
+- `.keepingDataOf(previous)` → this value, keeping `previous`'s data if this is busy or error.
+- `.hasLatestData`, `.latestData` (throws when none), `.latestDataOrNull` → the success data, or
+  the kept data.
+- `.refreshing` → busy with kept data.
+- `==` compares kept data too; `.mapSuccess`/`.cast` map it too; combinators drop it.
 
 ### Building one from a `Future`/`Stream`
 
@@ -53,6 +69,10 @@ catch it there and convert it to `Fetchable.error(e)` at the boundary.
 > **Fixed in 0.1.0:** `combine7F`, `combine8F` and `combine9F` used to leave `f6.state` out of
 > the combined state, so the result could read `success` while the 6th input was still busy. They
 > now sum every input (regression test: `test/regression_test.dart`).
+
+`combineAllF(Iterable<Fetchable<T>>)` → `Fetchable<BuiltList<T>>` combines any number of values
+of one type the same way (an empty input is a success with an empty list), and
+`combineAllFStreams` is its stream counterpart. (0.2.0)
 
 ### Deriving a dependent fetch
 
@@ -79,7 +99,10 @@ abstract class Progressable {
 ```
 
 Same four states, same `.state`/`.success`/`.hasError`/`.idle`/`.busy`/`.idleOrBusy`/`.error`
-getters, plus `.successOrIdle`. Use `Progressable` for save/delete/sign-in/launch actions — cases
+getters, plus `.successOrIdle`, `.when`/`.maybeWhen` (`busy` receives the progress), and
+`.progress` (0.2.0): `Progressable.busy(progress: 0.4)` carries how far along an action is, from
+0 to 1, or null when unknown. `futureAsProgressableWithProgress((report) async { report(0.4); })`
+builds such a stream. Use `Progressable` for save/delete/sign-in/launch actions — cases
 where a screen needs to know "busy vs. done vs. failed" but there's no payload to render.
 
 - `.toBusy()` → new `BusyProgressable`.
@@ -100,7 +123,8 @@ placeholder dependency in tests. It is a getter that returns a new stream on eve
 ### Combining several `Progressable`s
 
 `combine2P`..`combine9P` and `*PStreams` mirror the `Fetchable` combinators, minus the payload
-tuple — overall state via `AbleState.+`, first error wins.
+tuple — overall state via `AbleState.+`, first error wins. `combineAllP`/`combineAllPStreams`
+take any number. (0.2.0)
 
 ### Extension helpers
 
@@ -110,6 +134,8 @@ tuple — overall state via `AbleState.+`, first error wins.
 - `Stream<Progressable>.flatMapOnSuccessP(AbleCubit cubit, Stream<Progressable> Function() mapper)`
   — chain a second action after the first succeeds, both as one combined `Progressable` stream.
 - `List<Fetchable>`/`List<Progressable>` boolean aggregates — see [[state-management]].
+- `withRetry(task, {maxAttempts, initialDelay, backoffFactor, maxDelay, retryIf})` — runs a
+  `Future` task with exponential backoff; compose inside `futureAsFetchable`. (0.2.0)
 
 Both types implement structural `==`/`hashCode`/`toString()` by hand, so
 `Fetchable.success(x) == Fetchable.success(x)` holds when `x == x` — regardless of the type

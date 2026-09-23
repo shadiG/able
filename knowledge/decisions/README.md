@@ -16,6 +16,8 @@ instead of inventing a plausible-sounding rationale.
 | [ADR-004](ADR-004-centralized-exception-handling.md) | Centralized `ExceptionHandler` + `Able.initialize` | Accepted |
 | [ADR-005](ADR-005-rebuild-alias-for-emit.md) | `rebuild()` as the sanctioned alias for `emit()` | Accepted |
 | [ADR-006](ADR-006-errors-win-when-combining.md) | Errors take precedence when combining states | Accepted |
+| [ADR-007](ADR-007-kept-data-on-busy-and-error.md) | Busy and error `Fetchable`s can keep earlier data | Accepted |
+| [ADR-008](ADR-008-lints-as-analyzer-plugin.md) | Lints ship as an `analysis_server_plugin` package | Accepted |
 
 ## What is *not* here
 

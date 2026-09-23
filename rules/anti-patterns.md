@@ -162,9 +162,26 @@ same field threw `Bad state: Future already completed`. It now stops at the firs
 error, so awaiting a field that errors and then recovers (a Retry) is safe. Kept here so the
 numbering of the other items stays stable.
 
+## 11. Resetting a loaded field to plain `busy` on reload
+
+```dart
+// WRONG (since 0.2.0) — the list disappears behind a spinner on every refresh
+rebuild(state.rebuild((b) => b..contactsF = Fetchable.busy()));
+```
+
+Use `state.contactsF.toRefreshing()` (or `keepingDataOf` in a `then:`), so the screen keeps what it
+was showing while the new data loads — see [[patterns]] item 21. Plain `busy` is right only for a
+first load, or when the old data must not be shown any more (a different user, a changed filter
+whose old results would mislead).
+
+## 12. Hand-written `onPressed: xP.busy ? null : ...` buttons
+
+Every such button re-implements the disable-while-busy rule and usually forgets the spinner and the
+screen-reader label. Use `ProgressableButton` ([[patterns]] item 24).
+
 ## Related knowledge
 
-- Concepts: [[AbleCubit]] (#1, #3, #4, #7, #10), [[Fetchable]]/[[Progressable]] (#2, #8, #9),
+- Concepts: [[AbleCubit]] (#1, #3, #4, #7, #10), [[Fetchable]] (#11), [[Fetchable]]/[[Progressable]] (#2, #8, #9),
   [[ProgressablesResultPresenter]] (#5), [[AbleConfigs]] (#6).
 - Decisions: [[ADR-005-rebuild-alias-for-emit]] (#1), [[ADR-004-centralized-exception-handling]]
   (#6, #8).

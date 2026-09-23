@@ -22,7 +22,10 @@ consistently with everything established so far. That is this file's job.
 
 ```
 lib/                  The package itself — always authoritative for exact behavior.
-test/                 Regression tests for the 0.1.0 fixes, plus presenter tests.
+lib/testing.dart      Test-only matchers (isSuccessF, isErrorP, ...) — import from tests only.
+test/                 Regression tests (0.1.0 fixes), feature tests (0.2.0), presenter tests.
+able_lints/           Analyzer plugin: three warnings for the most common Able mistakes.
+.github/workflows/    CI: package, able_lints and both examples.
 example/
   counter/             Smallest possible AbleCubit app.
   country_listing/     Reference implementation of every rule: business + view cubits, tests.
@@ -77,7 +80,8 @@ docs. Treat any newly discovered one the same way: document it, don't quietly no
    established (see `rules/patterns.md` for consuming-app conventions like the business-cubit/
    view-cubit split).
 8. **If the change affects a documented pattern**, update `example/country_listing/` to match and
-   run `flutter analyze` and `flutter test` there.
+   run `dart analyze` (it runs `able_lints`) and `flutter test` there. If it adds a mistake worth
+   catching mechanically, consider a rule in `able_lints/`.
 9. **Check whether the change introduces:**
    - a new architectural rule (a pattern that should now be mandatory project-wide),
    - a new reusable pattern (worth a `rules/patterns.md` recipe),

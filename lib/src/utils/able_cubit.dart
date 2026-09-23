@@ -6,6 +6,7 @@ import 'package:rxdart/rxdart.dart';
 
 class AbleCubit<State> extends Cubit<State> {
   final _compositeSubscription = CompositeSubscription();
+  final _keyedSubscriptions = <Object, StreamSubscription>{};
 
   AbleCubit(super.initialState);
 
@@ -22,7 +23,27 @@ class AbleCubit<State> extends Cubit<State> {
     if (!_compositeSubscription.isDisposed) {
       _compositeSubscription.dispose();
     }
+    _keyedSubscriptions.clear();
     return super.close();
+  }
+
+  /// Cancels the running `execute*` call started with [key], if any. Its
+  /// `then:` gets no further values.
+  void cancelExecution(Object key) {
+    final previous = _keyedSubscriptions.remove(key);
+    if (previous != null && !_compositeSubscription.isDisposed) {
+      _compositeSubscription.remove(previous);
+    }
+  }
+
+  /// Starts a subscription; with a [key], first cancels the previous one
+  /// started with the same key.
+  StreamSubscription _startKeyed(Object? key, StreamSubscription Function() start) {
+    if (key == null) return start();
+    cancelExecution(key);
+    final subscription = start();
+    _keyedSubscriptions[key] = subscription;
+    return subscription;
   }
 
   Stream<Progressable> doIf({
@@ -52,7 +73,11 @@ class AbleCubit<State> extends Cubit<State> {
   /// finishes after its screen is gone does not throw.
   void rebuild(State state) {
     if (isClosed) return;
+    final previous = this.state;
     emit(state);
+    if (previous != state) {
+      Able.observer?.onRebuild(this, previous, state);
+    }
   }
 }
 
@@ -68,6 +93,7 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
     return cubit.closeWithCubit(listen(onData, onError: (e, s) {
       final isExpected = isExpectedError != null && isExpectedError(e);
       onData?.call(Fetchable.error(e));
+      Able.observer?.onError(cubit, e, s, AbleType.fetchable, expected: isExpected);
       if (!isExpected) {
         onUnexpectedError?.call(e, s);
         ExceptionHandler().handleException(e, s, AbleType.fetchable);
@@ -124,6 +150,7 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
     return cubit.closeWithCubit(listen(onData, onError: (e, s) {
       final isExpected = isExpectedError != null && isExpectedError(e);
       onData?.call(Progressable.error(e));
+      Able.observer?.onError(cubit, e, s, AbleType.progressable, expected: isExpected);
       if (!isExpected) {
         onUnexpectedError?.call(e, s);
         ExceptionHandler().handleException(e, s, AbleType.progressable);
@@ -168,6 +195,12 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
   }
 }
 
+/// The `execute*` methods, called unqualified inside a cubit.
+///
+/// Each takes an optional `key`: starting a call with a key first cancels the
+/// running call with the same key, so only the latest one reaches `then:`.
+/// Use it for actions a user can re-trigger before the last one finishes (a
+/// search, a filter): `executeF(() => repo.search(q), key: #search, then: ...)`.
 extension AbleCubitExt<T> on AbleCubit<T> {
   StreamSubscription executeF<SP>(
     Future<SP> Function() future, {
@@ -175,15 +208,15 @@ extension AbleCubitExt<T> on AbleCubit<T> {
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
     bool takeOnce = true,
+    Object? key,
   }) =>
-      (takeOnce
-              ? futureAsFetchable(future).takeOnceSuccess()
-              : futureAsFetchable(future))
-          .presentF(
-        this,
-        then,
+      executeSF(
+        futureAsFetchable(future),
+        then: then,
         onUnexpectedError: onUnexpectedError,
         isExpectedError: isExpectedError,
+        takeOnce: takeOnce,
+        key: key,
       );
 
   StreamSubscription executeSF<SP>(
@@ -192,12 +225,16 @@ extension AbleCubitExt<T> on AbleCubit<T> {
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
     bool takeOnce = true,
+    Object? key,
   }) =>
-      (takeOnce ? fetchable.takeOnceSuccess() : fetchable).presentF(
-        this,
-        then,
-        onUnexpectedError: onUnexpectedError,
-        isExpectedError: isExpectedError,
+      _startKeyed(
+        key,
+        () => (takeOnce ? fetchable.takeOnceSuccess() : fetchable).presentF(
+          this,
+          then,
+          onUnexpectedError: onUnexpectedError,
+          isExpectedError: isExpectedError,
+        ),
       );
 
   StreamSubscription executeP(
@@ -206,15 +243,15 @@ extension AbleCubitExt<T> on AbleCubit<T> {
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
     bool takeOnce = true,
+    Object? key,
   }) =>
-      (takeOnce
-              ? futureAsProgressable(future).takeOnceSuccess()
-              : futureAsProgressable(future))
-          .presentP(
-        this,
-        then,
+      executeSP(
+        futureAsProgressable(future),
+        then: then,
         onUnexpectedError: onUnexpectedError,
         isExpectedError: isExpectedError,
+        takeOnce: takeOnce,
+        key: key,
       );
 
   StreamSubscription executeSP(
@@ -224,25 +261,21 @@ extension AbleCubitExt<T> on AbleCubit<T> {
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
     bool takeOnce = true,
+    Object? key,
   }) {
+    var source = takeOnce ? progressable.takeOnceSuccess() : progressable;
     if (onSuccessP != null) {
       // onSuccessP starts only once the first action succeeds.
-      return (takeOnce ? progressable.takeOnceSuccess() : progressable)
-          .switchMap((p) => p.success ? onSuccessP() : Stream.value(p))
-          .presentP(
-        this,
-        then,
-        onUnexpectedError: onUnexpectedError,
-        isExpectedError: isExpectedError,
-      );
-    } else {
-      return (takeOnce ? progressable.takeOnceSuccess() : progressable)
-          .presentP(
-        this,
-        then,
-        onUnexpectedError: onUnexpectedError,
-        isExpectedError: isExpectedError,
-      );
+      source = source.switchMap((p) => p.success ? onSuccessP() : Stream.value(p));
     }
+    return _startKeyed(
+      key,
+      () => source.presentP(
+        this,
+        then,
+        onUnexpectedError: onUnexpectedError,
+        isExpectedError: isExpectedError,
+      ),
+    );
   }
 }

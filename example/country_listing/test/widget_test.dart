@@ -44,6 +44,28 @@ void main() {
     expect(find.text('Countries refreshed'), findsOneWidget);
   });
 
+  testWidgets('reloading keeps the list on screen', (tester) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.byTooltip('Reload'));
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.text('Argentina'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Countries refreshed'), findsOneWidget);
+  });
+
+  testWidgets('the detail favorite button toggles', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Argentina'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add to favorites'));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove from favorites'), findsOneWidget);
+  });
+
   testWidgets('favoriting a country updates the summary', (tester) async {
     await pumpApp(tester);
 

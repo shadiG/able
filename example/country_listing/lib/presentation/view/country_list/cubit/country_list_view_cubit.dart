@@ -63,7 +63,10 @@ class CountryListViewCubit extends AbleCubit<CountryListViewState> {
                 .rebuild((b) => b.sort((a, b) => a.country.name.compareTo(b.country.name)));
           });
         }),
-        then: (visibleCountriesF) => rebuild(state.rebuild((b) => b..visibleCountriesF = visibleCountriesF)),
+        // Keeps the rows on screen while the countries reload.
+        then: (visibleCountriesF) => rebuild(
+          state.rebuild((b) => b..visibleCountriesF = visibleCountriesF.keepingDataOf(state.visibleCountriesF)),
+        ),
         takeOnce: false,
       );
 

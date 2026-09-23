@@ -182,10 +182,19 @@ Reach for `FetchableListWidget` itself when a screen's list truly has no per-ite
 beyond "one row per element, with busy/error/empty slivers" — otherwise the buildSuccess-then-
 custom-widget style above gives more control over headers, grouping, and item keys than
 `buildItem` alone does. When it is used, `buildError`/`buildEmpty` are commonly suppressed to
-`(_, __) => const SliverToBoxAdapter(child: SizedBox.shrink())` for a list embedded inside a
-larger scrollable screen, where an inline sliver-sized error/empty state would look out of place
-next to the rest of the page — same reasoning as the `buildError`/`buildBusy` suppression pattern
-under [[patterns]] item 5.
+`(_, __) => const SizedBox.shrink()` (with `fillRemaining: false`) for a list embedded inside a
+larger scrollable screen, where an inline error/empty state would look out of place next to the
+rest of the page — same reasoning as the `buildError`/`buildBusy` suppression pattern under
+[[patterns]] item 5. Return a **box** widget there, not a sliver: the widget wraps it in a
+`SliverFillRemaining`/`SliverToBoxAdapter` itself. (Before 0.2.0 this item wrongly suggested
+returning a `SliverToBoxAdapter`, which would nest a sliver inside a sliver.)
+
+Variants (0.2.0), all sharing the same busy/error/empty handling:
+- `FetchableListWidget(separatorBuilder: ...)` — separators, like `ListView.separated`.
+- `FetchableSliverGrid(gridDelegate: ...)` — a sliver grid.
+- `FetchableListView` — a plain box `ListView`, for a whole screen body, a sheet or a tab where no
+  `CustomScrollView` is needed.
+- `FetchablePagedListWidget` — see item 22.
 
 ## 7. Side effects on action completion
 
@@ -539,6 +548,12 @@ field is what `FetchableListWidget<CountryListItem>` renders.
   harmless no-op.
 - Build the business cubit over a fake repository with `latency: Duration.zero`, then await its
   first load with the same accessor production code uses (`await cubit.countries`).
+- Assert on state with the matchers in `package:able/testing.dart` (0.2.0): `isIdleF`, `isBusyF`,
+  `isRefreshingF([data])`, `isSuccessF([data])`, `isErrorF([error])`, and `isIdleP`,
+  `isBusyP([progress])`, `isSuccessP`, `isErrorP([error])`. Each optional argument is a value or
+  a matcher: `expect(cubit.state.countriesF, isErrorF(isA<CountryLoadException>()))`.
+- When tests need different `Able.initialize` configurations, call `Able.resetForTest()` in
+  `tearDown`; otherwise the second `initialize` is ignored.
 - Drive actions with `.asFuture(cubit)`: `await cubit.toggleFavorite('TG').asFuture(cubit)`; an
   expected error surfaces as `throwsA(isA<FavoriteLimitReachedException>())`.
 - For derived view-cubit fields, call the input method and let the event loop settle
@@ -550,11 +565,154 @@ field is what `FetchableListWidget<CountryListItem>` renders.
 
 Reference: `example/country_listing/test/`.
 
+## 21. Reloading without a spinner flash: keep the data while busy
+
+A reload that sets the field to plain `Fetchable.busy()` hides everything the screen was showing
+until the new data arrives. Since 0.2.0 a busy (or error) `Fetchable` can keep the data it had:
+
+```dart
+// In the business method that reloads:
+rebuild(state.rebuild((b) => b..countriesF = state.countriesF.toRefreshing()));
+
+// In a view cubit's then:, for a field derived from it:
+then: (visibleF) => rebuild(state.rebuild((b) => b..visibleF = visibleF.keepingDataOf(state.visibleF))),
+```
+
+- `toRefreshing()` = busy, keeping this value's data. `keepingDataOf(previous)` = this busy/error
+  value, keeping `previous`'s data. Success and idle are left as they are.
+- Read kept data with `latestData` / `latestDataOrNull` / `hasLatestData`; `refreshing` is true
+  for busy-with-data. `.data` still only works on success.
+- `FetchableWidget`, `FetchableListWidget`, `FetchableSliverGrid` and `FetchableListView` render
+  kept data with the success builder while busy (`showLatestDataWhileBusy`, default true), so a
+  reload keeps the screen and a separate indicator (a `LinearProgressIndicator` bound to the
+  reload's `Progressable`) shows progress. An error still renders the error builder.
+- Combining (`combine2F`...) does not carry kept data: keep it on the derived field instead, as in
+  the view-cubit line above.
+
+Reference: `example/country_listing` (`loading.dart`, `CountryListViewCubit._initVisibleCountries`).
+
+## 22. Pagination: `PagedList`, `executeNextPage`, `FetchablePagedListWidget`
+
+```dart
+// State: one field.
+Fetchable<PagedList<Contact>> get contactsF;          // initial: Fetchable.idle()
+
+// Cubit: one method, used both for the first page and for "load more".
+void loadContacts({bool refresh = false}) => executeNextPage<Contact>(
+      key: #contacts,
+      current: state.contactsF,
+      refresh: refresh,
+      firstPageKey: 0,
+      fetch: (page) => contactRepository.fetchPage(page as int),   // returns PageResult<Contact>
+      then: (contactsF) => rebuild(state.rebuild((b) => b..contactsF = contactsF)),
+    );
+
+// View, inside a CustomScrollView:
+FetchablePagedListWidget<Contact>(
+  fetchable: contactsF,
+  onLoadMore: cubit.loadContacts,
+  buildItem: (context, contact) => ContactTile(contact: contact),
+  buildEmpty: (context) => const NoContacts(),
+)
+```
+
+- The page key is whatever the source uses (page number, cursor, offset); a `PageResult` with a
+  null `nextPageKey` is the last page.
+- While a page loads, the field is busy keeping the loaded items (item 21); a failed page is an
+  error keeping them. The widget shows a loading footer or an error footer with Retry.
+- `executeNextPage` does nothing while a page is loading or after the last page, so calling it
+  from `onLoadMore` repeatedly is safe. `refresh: true` starts over, cancelling a page in flight
+  (the `key`), and keeps the old items on screen until the first page arrives.
+
+## 23. Actions a user can re-trigger: `key:` on `execute*`
+
+```dart
+void search(String query) => executeF(
+      () => placeRepository.search(query),
+      key: #search,
+      then: (resultsF) => rebuild(state.rebuild((b) => b..resultsF = resultsF)),
+    );
+```
+
+Starting an `execute*` call with a `key` first cancels the running call with the same key, so only
+the latest one reaches `then:`, and a slow response to an old query can't overwrite a newer one.
+`cancelExecution(key)` cancels without starting another. Different keys run side by side. For a
+*derived* value computed from state instead of a method call, use `switchMapOnSuccessF` (item 11).
+To wait for typing to pause, debounce the source with rxdart's `debounceTime` before
+`switchMapOnSuccessF`.
+
+Cancelling stops the result from reaching state; it does not stop the `Future` itself. Don't use it
+to "cancel" a write the user expects to happen.
+
+## 24. Buttons bound to an action: `ProgressableButton`
+
+```dart
+ProgressableButton(
+  progressable: saveP,
+  onPressed: cubit.save,
+  busySemanticsLabel: l10n.saving,
+  child: Text(l10n.save),
+)
+```
+
+Disabled with a spinner while `saveP` is busy (a determinate one when the busy value has a
+`progress`). Renders a `FilledButton`; pass `builder: (context, onPressed, child) => AppButton(...)`
+to use the app's own button. Use it instead of hand-writing `onPressed: saveP.busy ? null : ...`.
+
+## 25. Reporting progress, retrying, combining many values
+
+- `futureAsProgressableWithProgress((report) async { ...; report(sent / total); })` emits
+  `Progressable.busy(progress: ...)` values; read them with `progressable.progress` or render them
+  with `ProgressableButton`.
+- `withRetry(() => repository.fetchAll(), maxAttempts: 3, retryIf: (e) => e is NetworkException)`
+  retries with exponential backoff; compose it inside `futureAsFetchable`. Only retry errors that
+  can succeed on a second try.
+- `combineAllF(listOfFetchables)` / `combineAllP(...)` (and `*Streams`) combine any number of
+  same-typed values into `Fetchable<BuiltList<T>>` / `Progressable`, instead of nesting
+  `combine9F` calls.
+
+## 26. Observing every cubit: `AbleObserver`
+
+```dart
+class CrashlyticsObserver extends AbleObserver {
+  @override
+  void onError(AbleCubit cubit, Object? error, StackTrace stackTrace, AbleType type, {required bool expected}) {
+    if (!expected) crashReporter.record(error, stackTrace, reason: '${cubit.runtimeType}');
+  }
+}
+
+Able.initialize(observer: CrashlyticsObserver(), ...);   // or Able.observer = ...
+```
+
+`onRebuild(cubit, previous, next)` sees every state change made through `rebuild`; `onError` sees
+every `execute*` failure, with `expected` telling whether `isExpectedError` matched. Use it for
+app-wide logging and analytics rather than adding logging to each cubit.
+
+## 27. Linting the common mistakes: `able_lints`
+
+`able_lints/` is an analyzer plugin with three warnings: `able_then_without_rebuild`
+([[anti-patterns]] #1), `able_mirror_missing_take_once_false` (#4) and
+`able_mirror_missing_distinct` ([[cubits]], `.distinct()`). Enable it in the app's
+`analysis_options.yaml`:
+
+```yaml
+plugins:
+  able_lints:
+    path: ../able/able_lints   # or a git/hosted source
+```
+
+The warnings show in the IDE and in `dart analyze`. `flutter analyze` does not run analyzer
+plugins, so CI should run `dart analyze` (as `.github/workflows/ci.yml` does for the examples).
+
 ## Related knowledge
 
 - Concepts: all package-internal concepts, plus [[BusinessCubit]] and [[ViewCubit]] (items 9-19
   are entirely about those two conventions).
-- Reference implementation: `example/country_listing/` uses items 1-12 and 16-20; its README
-  maps each Able feature to the file that shows it.
+- Reference implementation: `example/country_listing/` uses items 1-12, 16-21, 24 and 27; its
+  README maps each Able feature to the file that shows it. Items 22, 23, 25 and 26 are covered by
+  `test/features_test.dart`.
+- Concepts for items 21-27: [[Fetchable]] (kept data), [[Paging]], [[AbleObserver]],
+  [[AbleLints]].
+- Decisions: [[ADR-007-kept-data-on-busy-and-error]], [[ADR-008-lints-as-analyzer-plugin]].
 - Decisions: [[ADR-004-centralized-exception-handling]] (item 1, item 7).
 - Graph: `knowledge/graph/graph.json` (node `rule-patterns`)

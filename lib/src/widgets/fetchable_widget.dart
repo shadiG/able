@@ -10,6 +10,11 @@ abstract class BaseFetchableWidget<D> extends StatelessWidget {
   final BuildBusy? buildBusy;
   final bool treatIdleAsBusy;
 
+  /// When the fetchable is busy but kept earlier data (`toRefreshing`,
+  /// `keepingDataOf`), render that data with [buildSuccess] instead of the
+  /// busy builder, so a reload doesn't flash a spinner. Default true.
+  final bool showLatestDataWhileBusy;
+
   const BaseFetchableWidget({
     required this.fetchable,
     required this.buildSuccess,
@@ -17,6 +22,7 @@ abstract class BaseFetchableWidget<D> extends StatelessWidget {
     super.key,
     this.buildBusy,
     this.treatIdleAsBusy = true,
+    this.showLatestDataWhileBusy = true,
   });
 }
 
@@ -28,6 +34,7 @@ class FetchableWidget<D> extends BaseFetchableWidget<D> {
     super.buildBusy,
     super.key,
     super.treatIdleAsBusy = true,
+    super.showLatestDataWhileBusy = true,
   });
 
   @override
@@ -39,15 +46,14 @@ class FetchableWidget<D> extends BaseFetchableWidget<D> {
       if (buildError != null) {
         return buildError!(context, fetchable.error);
       } else {
-        return Able.configs.errorWidget != null
-            ? Able.configs.errorWidget!(context, fetchable.error)
-            : const SizedBox();
+        return Able.configs.errorWidget != null ? Able.configs.errorWidget!(context, fetchable.error) : const SizedBox();
       }
     }
+    if (fetchable.refreshing && showLatestDataWhileBusy) {
+      return buildSuccess(context, fetchable.latestData);
+    }
     if (fetchable.busy || (fetchable.idle && treatIdleAsBusy)) {
-      return buildBusy != null
-          ? buildBusy!(context)
-          : Able.configs.loadingWidget ?? const SizedBox();
+      return buildBusy != null ? buildBusy!(context) : Able.configs.loadingWidget ?? const SizedBox();
     }
     if (fetchable.success) {
       return buildSuccess(context, fetchable.data);

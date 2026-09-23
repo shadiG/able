@@ -27,6 +27,8 @@ class AbleCubit<State> extends Cubit<State> {
 }
 ```
 
+- **`rebuild`** also tells `Able.observer` (an [[AbleObserver]], 0.2.0) about every state change;
+  `presentF`/`presentP` tell it about every error.
 - **`rebuild`** is `emit` under a different name — call it, not `emit`, so state transitions
   read consistently across a codebase built on `able`. Since 0.1.0 it does nothing once the cubit
   is closed, so a `futureAsProgressable` body that finishes after its screen was popped no longer
@@ -79,6 +81,13 @@ All four take:
 - `takeOnce: true` (default) — stops listening after the first success (`takeWhileInclusive`
   under the hood); pass `takeOnce: false` for a subscription meant to live for the cubit's whole
   lifetime (e.g. mirroring another cubit's ongoing `Fetchable` stream).
+
+All four also take `key:` (0.2.0): starting a call with a key first cancels the running call with
+the same key, so only the latest reaches `then:`; `cancelExecution(key)` cancels without starting
+another. See [[patterns]] item 23.
+
+`executeNextPage` (extension `AblePagingExtension`, 0.2.0) builds on `executeSF` to load pages of a
+`Fetchable<PagedList<T>>`; see [[patterns]] item 22.
 
 `executeSP` additionally accepts `onSuccessP:` — a second `Progressable` stream that starts only
 *after* the first succeeds; the reported progress stays busy until both finish. (Before 0.1.0 it

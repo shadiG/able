@@ -16,7 +16,7 @@ The library provides convenient factory functions that take a `Fetchable` object
 Errors are not immediately wrapped in a `Fetchable` object when they occur. Instead, error handling is performed at the end of the data flow, where results are subscribed to. This approach allows for taking advantage of `Stream` error handling operators.
 
 ### Subscribing to `Fetchable`
-When subscribing to a `Fetchable` object, it is recommended to use the provided extension functions `Stream.presentF` or `Stream.presentP`. These functions ensure that errors emitted by a `Stream` are wrapped in a `Fetchable` or `Progressable` object to be shown in the UI. Additionally, you can define a callback function, `isExpectedError`, to determine if an error should be treated as an expected one or not. By default, only the `NoConnectionException` is considered an expected error.
+When subscribing to a `Fetchable` object, it is recommended to use the provided extension functions `Stream.presentF` or `Stream.presentP`. These functions ensure that errors emitted by a `Stream` are wrapped in a `Fetchable` or `Progressable` object to be shown in the UI. Additionally, you can define a callback function, `isExpectedError`, to determine if an error should be treated as an expected one or not. Errors it doesn't match are reported to the global `handleException` configured in `Able.initialize`.
 
 ## Progressable
 The `Progressable` class is similar to `Fetchable` but is used to represent operations that do not have any resulting data. It is suitable for scenarios where progress tracking or error handling is necessary, but no specific data is fetched or returned.
@@ -29,6 +29,24 @@ To ensure consistent error handling and display of progress indicators or error 
 
 ## Example
 Consider a "Sign In" route in your application. If the `SignInFailed` error is expected in this scenario, you can filter it out using the `isExpectedError` callback when calling `Stream.presentF` or `Stream.presentP`. Afterwards, you can handle the error on the UI level and display a corresponding message based on the details contained in the `SignInFailed` exception. The exception or error object can be accessed by reading the `Progressable.error` field.
+
+## Beyond the basics (0.2.0)
+
+- **Keep data while reloading**: `state.itemsF.toRefreshing()` keeps the loaded items on screen
+  while new ones load; the widgets render them instead of a spinner.
+- **Pagination**: hold a `Fetchable<PagedList<T>>`, load pages with `executeNextPage`, render with
+  `FetchablePagedListWidget`.
+- **Cancel stale work**: `executeF(..., key: #search)` cancels the previous call with the same key.
+- **Buttons**: `ProgressableButton(progressable: saveP, onPressed: save, child: ...)`.
+- **Progress, retry, combining many**: `futureAsProgressableWithProgress`, `withRetry`,
+  `combineAllF`/`combineAllP`.
+- **Observability**: an `AbleObserver` sees every rebuild and error.
+- **Testing**: `import 'package:able/testing.dart';` for matchers like `isSuccessF(...)`.
+- **Lints**: enable the `able_lints` analyzer plugin to catch a `then:` that never calls
+  `rebuild`, and live mirrors missing `takeOnce: false` or `.distinct()`.
+
+The full rules, recipes and design decisions are in `SKILL.md`, `rules/` and `knowledge/`; a
+working app is in `example/country_listing/`.
 
 ## Summary
 The Able library simplifies data fetching and state management in Flutter applications by introducing the `Fetchable` and `Progressable` concepts. By using these classes, you can consolidate multiple data fetching states into a single field, streamline error handling, and provide consistent UI feedback for loading, errors, and operations without data.

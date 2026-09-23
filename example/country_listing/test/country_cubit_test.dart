@@ -1,4 +1,5 @@
 import 'package:able/able.dart';
+import 'package:able/testing.dart';
 import 'package:country_listing/data/repository/in_memory_country_repository.dart';
 import 'package:country_listing/data/source/countries_data.dart';
 import 'package:country_listing/domain/business/country/country_cubit.dart';
@@ -31,10 +32,10 @@ void main() {
     final cubit = createCubit(failuresBeforeSuccess: 1);
 
     await expectLater(cubit.countries, throwsA(isA<CountryLoadException>()));
-    expect(cubit.state.countriesF.hasError, isTrue);
+    expect(cubit.state.countriesF, isErrorF(isA<CountryLoadException>()));
 
     await cubit.loadCountries().asFuture(cubit);
-    expect(cubit.state.countriesF.data, countriesData);
+    expect(cubit.state.countriesF, isSuccessF(countriesData));
     await cubit.close();
   });
 

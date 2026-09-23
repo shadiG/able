@@ -27,6 +27,10 @@ class AbleConfigs {
 class Able {
   static AbleConfigs? _configs;
 
+  /// Receives every cubit's rebuilds and errors; null for none. Can be set or
+  /// replaced at any time, independently of [initialize].
+  static AbleObserver? observer;
+
   /// Access the global configurations for the Able package.
   ///
   /// Throws an assertion error if [Able.initialize] has not been called.
@@ -46,21 +50,32 @@ class Able {
     AbleErrorWidgetBuilder? errorWidget,
     HandleException? handleException,
     OnError? onError,
+    AbleObserver? observer,
   }) {
     if (_configs != null) {
       debugPrint('Warning: Able.initialize() was called more than once. The original configuration will be kept.');
       return;
     }
 
+    if (observer != null) Able.observer = observer;
     _configs = AbleConfigs._(
       loadingWidget: loadingWidget,
       errorWidget: errorWidget,
     );
 
-    // Configure the exception handler as per the original logic.
     ExceptionHandler(onError: onError);
     if (handleException != null) {
       ExceptionHandler().subscribe(handleException);
     }
+  }
+
+  /// Forgets the configuration, the observer and every exception handler, so
+  /// the next [initialize] applies. Call it in a test's `tearDown` when tests
+  /// need different configurations.
+  @visibleForTesting
+  static void resetForTest() {
+    _configs = null;
+    observer = null;
+    ExceptionHandler().reset();
   }
 }

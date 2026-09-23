@@ -1,3 +1,44 @@
+## 0.2.0
+
+New features. Each has tests in `test/features_test.dart`; docs are in `rules/patterns.md`
+items 21-27.
+
+### Added
+* **Keep data while reloading.** A busy or error `Fetchable` can keep an earlier success's data:
+  `toRefreshing()`, `keepingDataOf(previous)`, `latestData`, `latestDataOrNull`, `hasLatestData`,
+  `refreshing`. `FetchableWidget` and the list widgets render kept data while busy
+  (`showLatestDataWhileBusy`, default true). See ADR-007.
+* **`when` / `maybeWhen`** on `Fetchable` and `Progressable`, for exhaustive handling of the four
+  states.
+* **Cancel by key.** `executeF`/`executeSF`/`executeP`/`executeSP` take `key:`; a new call with the
+  same key cancels the previous one. `AbleCubit.cancelExecution(key)`.
+* **Pagination.** `PagedList<T>`, `PageResult<T>`, `executeNextPage` and
+  `FetchablePagedListWidget<T>`, with loading and retry footers.
+* **Progress.** `Progressable.busy(progress:)`, `Progressable.progress`, and
+  `futureAsProgressableWithProgress`.
+* **`ProgressableButton`**, disabled with a spinner (determinate when progress is known) while
+  busy; takes a `builder` for app-specific buttons.
+* **List widgets.** `separatorBuilder` on `FetchableListWidget`; new `FetchableSliverGrid` and
+  `FetchableListView` (a box `ListView`).
+* **`withRetry`**: retry a `Future` with exponential backoff and a `retryIf` filter.
+* **`combineAllF` / `combineAllP`** and their `*Streams` versions, for any number of inputs.
+* **`AbleObserver`**, set with `Able.initialize(observer:)` or `Able.observer`: sees every rebuild
+  and every `execute*` error, including whether it was expected.
+* **Testing.** `package:able/testing.dart` with matchers (`isSuccessF`, `isRefreshingF`,
+  `isErrorP`, ...) and `Able.resetForTest()`.
+* **`ExceptionHandler.subscribe`** now returns a function that unsubscribes; `unsubscribe(handler)`.
+* **`able_lints`**, a separate analyzer-plugin package: `able_then_without_rebuild`,
+  `able_mirror_missing_take_once_false`, `able_mirror_missing_distinct`. See ADR-008.
+* CI workflow for the package, `able_lints` and both examples.
+
+### Changed
+* `Fetchable` equality and `hashCode` include kept data.
+* New dependency: `matcher` (used only by `package:able/testing.dart`).
+
+### Fixed
+* `rules/patterns.md` item 6 suggested a `SliverToBoxAdapter` in `FetchableListWidget.buildError`,
+  which would nest a sliver inside a sliver; it now says to return a box widget.
+
 ## 0.1.0
 
 Bug-fix release. Every fix has a regression test in `test/regression_test.dart`.

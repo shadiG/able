@@ -27,7 +27,21 @@ class ExceptionHandler {
 
   final _exceptionHandlers = <HandleException>[];
 
-  void subscribe(HandleException handler) {
+  /// Adds [handler]. Returns a function that removes it again.
+  void Function() subscribe(HandleException handler) {
     _exceptionHandlers.add(handler);
+    return () => unsubscribe(handler);
+  }
+
+  /// Removes [handler]; does nothing if it isn't subscribed.
+  void unsubscribe(HandleException handler) {
+    _exceptionHandlers.remove(handler);
+  }
+
+  /// Removes every handler and the [onError] callback. Called by
+  /// `Able.resetForTest`; not meant for app code.
+  void reset() {
+    _exceptionHandlers.clear();
+    onError = null;
   }
 }

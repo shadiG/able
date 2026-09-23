@@ -16,20 +16,29 @@ lib/
       able_state.dart           # AbleState enum (idle/busy/success/error) + `+` combinator
       able_type.dart            # AbleType enum (fetchable/progressable) — tags exceptions by origin; exported
       able_utils.dart           # cross-cutting extensions (asFetchable, asProgressable, list helpers)
+      able_observer.dart        # AbleObserver — app-wide hook on rebuilds and errors
     fetchable/
       fetchable.dart            # Fetchable<D> sealed-style class hierarchy
       fetchable_utils.dart      # futureAsFetchable, streamAsFetchable, combine2F..combine9F(Streams)
+    paging/
+      paged_list.dart           # PagedList<T>, PageResult<T>
+      paging_cubit.dart         # executeNextPage (AblePagingExtension on AbleCubit)
     progressable/
       progressable.dart         # Progressable class hierarchy
       progressable_utils.dart   # futureAsProgressable, combine2P..combine9P(Streams)
     utils/
       able_cubit.dart           # AbleCubit<State> + executeF/executeP/executeSF/executeSP/presentF/presentP
       exception_handler.dart    # ExceptionHandler singleton, HandleException/OnError typedefs
+      retry.dart                # withRetry (exponential backoff)
     widgets/
       common.dart                # BuildSuccess/BuildError/BuildBusy/BuildItem/BuildEmpty typedefs
       fetchable_widget.dart       # FetchableWidget<D>
-      fetchable_list_widget.dart  # FetchableListWidget<D> (sliver-based)
+      fetchable_list_widget.dart  # FetchableListWidget / FetchableSliverGrid (slivers), FetchableListView (box)
       progressables_result_presenter.dart # ProgressablesResultPresenter / ProgressableResultPresenter
+      fetchable_paged_list_widget.dart    # FetchablePagedListWidget<T> (sliver, loads more)
+      progressable_button.dart            # ProgressableButton
+  testing.dart                  # package:able/testing.dart — matchers, for tests only
+able_lints/                     # analyzer plugin (separate package) — see ADR-008
 ```
 
 Each `src/<area>/export.dart` re-exports that area's public files; `lib/able.dart` re-exports

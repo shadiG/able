@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  package:
+    name: able
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze lib test
+      - run: flutter test
+      - name: Validate knowledge base
+        run: dart run tool/validate_knowledge.dart
+
+  able_lints:
+    name: able_lints
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: able_lints
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: dart pub get
+      - run: dart analyze
+      - run: dart test
+
+  examples:
+    name: example ${{ matrix.example }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [counter, country_listing]
+    defaults:
+      run:
+        working-directory: example/${{ matrix.example }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # dart analyze, not flutter analyze: only it runs the able_lints plugin.
+      - run: dart analyze
+      - run: flutter test

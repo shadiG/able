@@ -49,5 +49,9 @@ lib/
 | `buildBusy`/`buildError` suppressed for inline pieces | `_Summary`, detail app bar |
 | `[aP, bP].anyBusy` | list app bar progress bar |
 | `ProgressablesResultPresenter` (snackbar on success/error) | both views |
+| `toRefreshing` / `keepingDataOf` (reload keeps the list on screen) | `loading.dart`, `CountryListViewCubit._initVisibleCountries` |
+| `ProgressableButton` | detail screen, `_FavoriteButton` |
+| `package:able/testing.dart` matchers | `test/country_cubit_test.dart` |
+| `able_lints` analyzer plugin | `analysis_options.yaml` (run `dart analyze` to see its warnings) |
 
 `Able.initialize`'s `onError` isn't set, because each screen already shows its errors in its presenter's own `onError`. Setting both would show every non-ignored error twice.

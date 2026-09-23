@@ -8,6 +8,10 @@ to), `closeWithCubit` (auto-disposing subscriptions via an internal `CompositeSu
 `doIf`, and — via extension methods — `executeF`/`executeSF`/`executeP`/`executeSP` and
 `presentF`/`presentP`.
 
+Since 0.2.0 every `execute*` takes a `key:` that cancels the previous call with the same key
+(`cancelExecution` cancels without restarting), `executeNextPage` loads pages ([[Paging]]), and
+`rebuild`/`presentF`/`presentP` report to the [[AbleObserver]].
+
 ## Why it exists
 To give every cubit the same, tested way of turning a `Future`/`Stream` into
 [[Fetchable]]/[[Progressable]] state, with consistent error routing to [[ExceptionHandler]] and

@@ -80,6 +80,8 @@ class _CountryDetailContent extends StatelessWidget {
             _InfoRow(label: 'Region', value: country.region.label),
             _InfoRow(label: 'Population', value: country.population.withThousandsSeparators),
             _InfoRow(label: 'Code', value: country.code),
+            const SizedBox(height: 16),
+            const _FavoriteButton(),
             const SizedBox(height: 24),
             Text('More in ${country.region.label}', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
@@ -137,6 +139,28 @@ class _InfoRow extends StatelessWidget {
           Expanded(child: Text(label, style: textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.outline))),
           Text(value, style: textTheme.bodyLarge),
         ],
+      ),
+    );
+  }
+}
+
+class _FavoriteButton extends StatelessWidget {
+  const _FavoriteButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final isFavoriteF = context.select((CountryDetailViewCubit c) => c.state.isFavoriteF);
+    final toggleFavoriteP = context.select((CountryDetailViewCubit c) => c.state.toggleFavoriteP);
+
+    return FetchableWidget(
+      fetchable: isFavoriteF,
+      buildBusy: (context) => const SizedBox.shrink(),
+      // Disabled with a spinner while the toggle is saving.
+      buildSuccess: (context, isFavorite) => ProgressableButton(
+        progressable: toggleFavoriteP,
+        onPressed: context.read<CountryDetailViewCubit>().toggleFavorite,
+        busySemanticsLabel: 'Saving',
+        child: Text(isFavorite ? 'Remove from favorites' : 'Add to favorites'),
       ),
     );
   }

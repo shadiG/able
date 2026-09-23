@@ -1,5 +1,6 @@
 import 'package:able/able.dart';
 import 'package:able/src/fetchable/fetchable.dart';
+import 'package:built_collection/built_collection.dart';
 import 'package:rxdart/rxdart.dart';
 
 //fetchable extension
@@ -531,4 +532,36 @@ Stream<Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8, T9)>>
           f9: f9);
     },
   );
+}
+
+/// Combines any number of [Fetchable]s of the same type. Success, with every
+/// value in order, only when all are success; otherwise the state is combined
+/// with `AbleState +` and the first error wins. An empty input is a success
+/// with an empty list.
+///
+/// Returns a [BuiltList] so the result has structural equality and works
+/// with `.distinct()`.
+Fetchable<BuiltList<T>> combineAllF<T>(Iterable<Fetchable<T>> fetchables) {
+  var state = AbleState.success;
+  dynamic exception;
+  var hasError = false;
+  for (final f in fetchables) {
+    state = state + f.state;
+    if (f.hasError && !hasError) {
+      hasError = true;
+      exception = f.error;
+    }
+  }
+  return toFetchable<BuiltList<T>>(
+    state: state,
+    data: state == AbleState.success ? BuiltList<T>(fetchables.map((f) => f.data)) : null,
+    exception: exception,
+  );
+}
+
+/// Stream counterpart of [combineAllF]: emits a combined value whenever any
+/// input emits, once every input has emitted at least once.
+Stream<Fetchable<BuiltList<T>>> combineAllFStreams<T>(Iterable<Stream<Fetchable<T>>> streams) {
+  if (streams.isEmpty) return Stream.value(combineAllF<T>(const []));
+  return CombineLatestStream.list<Fetchable<T>>(streams).map(combineAllF);
 }

@@ -6,6 +6,9 @@
 type)`), invoked by `handleException(...)`, and (b) holds a single `OnError` callback (`void
 Function(dynamic e, String? message)`) read as `.onError`.
 
+Since 0.2.0 `subscribe` returns a function that removes the handler again, and `unsubscribe`
+removes one directly.
+
 ## Why it exists
 So [[AbleCubit]]'s `presentF`/`presentP` and [[ProgressablesResultPresenter]] have one shared place
 to report *unexpected* errors (crash reporting, logging, generic toasts) without each cubit/widget

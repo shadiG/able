@@ -3,7 +3,7 @@ description: >-
   Async state management for Flutter on top of flutter_bloc: Fetchable and
   Progressable value types, AbleCubit execution helpers, and widgets that
   render them.
-version: 0.1.0
+version: 0.2.0
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -17,6 +17,8 @@ dependencies:
   rxdart: ^0.28.0
   bloc: ^9.0.0
   flutter_bloc: ^9.1.1
+  # Only for package:able/testing.dart; Flutter's test framework pins the version.
+  matcher: ^0.12.16
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:able/src/common/able_state.dart';
 import 'package:able/src/progressable/progressable.dart';
 import 'package:rxdart/rxdart.dart';
@@ -303,4 +305,54 @@ Stream<Progressable> combine9PStreams({
       return combine9P(p1: p1, p2: p2, p3: p3, p4: p4, p5: p5, p6: p6, p7: p7, p8: p8, p9: p9);
     },
   );
+}
+
+/// Like [futureAsProgressable], but [func] can report how far along it is:
+/// each `report(0.4)` emits `Progressable.busy(progress: 0.4)`. Values are
+/// clamped to 0..1.
+Stream<Progressable> futureAsProgressableWithProgress(
+  Future<void> Function(void Function(double progress) report) func,
+) {
+  late final StreamController<Progressable> controller;
+  controller = StreamController<Progressable>(
+    onListen: () async {
+      controller.add(Progressable.busy());
+      try {
+        await func((progress) {
+          if (!controller.isClosed) {
+            controller.add(Progressable.busy(progress: progress.clamp(0.0, 1.0).toDouble()));
+          }
+        });
+        if (!controller.isClosed) controller.add(Progressable.success());
+      } catch (e, s) {
+        if (!controller.isClosed) controller.addError(e, s);
+      } finally {
+        await controller.close();
+      }
+    },
+  );
+  return controller.stream;
+}
+
+/// Combines any number of [Progressable]s: success only when all are success,
+/// otherwise the state is combined with `AbleState +` and the first error
+/// wins. An empty input is a success.
+Progressable combineAllP(Iterable<Progressable> progressables) {
+  var state = AbleState.success;
+  dynamic exception;
+  var hasError = false;
+  for (final p in progressables) {
+    state = state + p.state;
+    if (p.hasError && !hasError) {
+      hasError = true;
+      exception = p.error;
+    }
+  }
+  return toProgressable(state: state, exception: exception);
+}
+
+/// Stream counterpart of [combineAllP].
+Stream<Progressable> combineAllPStreams(Iterable<Stream<Progressable>> streams) {
+  if (streams.isEmpty) return Stream.value(Progressable.success());
+  return CombineLatestStream.list<Progressable>(streams).map(combineAllP);
 }
