@@ -13,6 +13,7 @@
 //  - every file in knowledge/concepts/ has a matching `concept` node (and vice versa)
 //  - every file in knowledge/decisions/ADR-*.md has a matching `decision` node (and vice versa)
 //  - ADR filenames follow the ADR-NNN-slug.md pattern
+//  - every app in example/ (a directory with a README.md) has a matching `example` node (and vice versa)
 //
 // Deliberately has zero dependencies beyond dart:core/io/convert so it runs with a bare Dart SDK,
 // no `pub get` required, and never goes stale relative to a pubspec.
@@ -31,7 +32,7 @@ const allowedRelations = {
   'decided_by',
 };
 
-const allowedNodeTypes = {'concept', 'rule', 'decision'};
+const allowedNodeTypes = {'concept', 'rule', 'decision', 'example'};
 
 int errorCount = 0;
 
@@ -137,6 +138,7 @@ void main() {
     nodes: nodes,
   );
   checkDecisions(root: root, nodes: nodes);
+  checkExamples(root: root, nodes: nodes);
 
   report();
 }
@@ -211,6 +213,33 @@ void checkDecisions({required Directory root, required List<Map<String, dynamic>
   for (final inGraph in pathsInGraph) {
     if (!adrFiles.contains(inGraph)) {
       fail('graph.json references a "decision" node whose file is missing on disk: knowledge/decisions/$inGraph');
+    }
+  }
+}
+
+void checkExamples({required Directory root, required List<Map<String, dynamic>> nodes}) {
+  final dir = Directory('${root.path}/example');
+  if (!dir.existsSync()) {
+    return;
+  }
+
+  final appsOnDisk = dir
+      .listSync()
+      .whereType<Directory>()
+      .where((d) => File('${d.path}/README.md').existsSync())
+      .map((d) => 'example/${d.uri.pathSegments.where((s) => s.isNotEmpty).last}/README.md')
+      .toSet();
+
+  final pathsInGraph = nodes.where((n) => n['type'] == 'example').map((n) => n['path'] as String).toSet();
+
+  for (final onDisk in appsOnDisk) {
+    if (!pathsInGraph.contains(onDisk)) {
+      warn('$onDisk has no matching "example" node in graph.json (orphan example)');
+    }
+  }
+  for (final inGraph in pathsInGraph) {
+    if (!appsOnDisk.contains(inGraph)) {
+      fail('graph.json references an "example" node whose app is missing on disk: $inGraph');
     }
   }
 }

@@ -8,14 +8,15 @@ and not exhaustive (no local variables, no every-method listing).
 
 ```json
 {
-  "nodes": [ { "id": "...", "type": "concept|rule|decision", "name": "...", "path": "...", "summary": "..." } ],
+  "nodes": [ { "id": "...", "type": "concept|rule|decision|example", "name": "...", "path": "...", "summary": "..." } ],
   "edges": [ { "from": "...", "relation": "...", "to": "...", "note": "..." } ]
 }
 ```
 
 - `id` — kebab-case, unique, stable (referenced by other nodes' edges).
 - `type` — `concept` (a `knowledge/concepts/*.md` file), `rule` (a `rules/*.md` file), or
-  `decision` (a `knowledge/decisions/ADR-*.md` file).
+  `decision` (a `knowledge/decisions/ADR-*.md` file), or `example` (an app under `example/`,
+  represented by its `README.md`).
 - `path` — repo-relative path to the file this node represents.
 - `relation` — one of exactly eight kinds: `uses`, `extends`, `implements`, `depends_on`,
   `used_by`, `governed_by`, `documented_by`, `decided_by`. No other relation string is valid — see
@@ -32,9 +33,11 @@ and not exhaustive (no local variables, no every-method listing).
   a convention/role, without that role being a compile-time dependency of the package itself.
 - `governed_by` — a rule file is normative for this concept (MUST/SHOULD/MUST NOT language
   applies).
+- `uses` from an `example` node — the example app's code exercises that concept directly.
 - `documented_by` — a rule file explains this concept descriptively, without necessarily stating
   a strict rule (used for the [[BusinessCubit]]/[[ViewCubit]] conventions, which are observed
-  patterns, not enforced rules).
+  patterns, not enforced rules). A concept may also be `documented_by` an `example` node when
+  that example is the working reference implementation of it.
 - `decided_by` — an ADR explains why this concept is shaped the way it is.
 - `implements` — reserved for a literal Dart `implements` relationship; unused in the current
   graph because none of the catalogued concepts implement an interface at the package level.
@@ -46,6 +49,9 @@ It's plain JSON — `grep`/`jq` it directly:
 ```bash
 # What governs Fetchable?
 jq '.edges[] | select(.from == "fetchable" and .relation == "governed_by")' knowledge/graph/graph.json
+
+# Which example app shows the view-cubit convention?
+jq '.edges[] | select(.from == "view-cubit" and .relation == "documented_by")' knowledge/graph/graph.json
 
 # What depends on AbleCubit?
 jq '.edges[] | select(.to == "able-cubit" and .relation == "depends_on")' knowledge/graph/graph.json

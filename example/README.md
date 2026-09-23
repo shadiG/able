@@ -1,16 +1,6 @@
-# example
+# Able examples
 
-A new Flutter project.
+- [counter](counter/): the smallest possible `AbleCubit` with one `Fetchable<int>`.
+- [country_listing](country_listing/): a full feature with a business cubit, view cubits, derived and live state, expected errors, and Able's widgets.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Each is a standalone Flutter app that depends on `able` through `path: ../..`.

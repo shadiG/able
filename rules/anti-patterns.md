@@ -157,9 +157,31 @@ reflect later `rebuild` calls. It won't: every `rebuild` replaces the whole `Sta
 previously-read `Fetchable` reference is a frozen snapshot. Always re-read the field from
 `state`/`context.select` rather than holding onto an old `Fetchable`/`Progressable` value.
 
+## 10. Awaiting `.asFuture` on a `Fetchable` field that can fail and later recover
+
+```dart
+// RISKY — throws "Bad state: Future already completed" if countriesF errors, then succeeds
+final countries = await mapFStream((s) => s.countriesF).asFuture(this);
+```
+
+`Stream<Fetchable<T>>.asFuture` completes its `Future` with the error on the first
+`Fetchable.error`, but it keeps listening: `takeOnceSuccess()` only stops after a *success*. When
+the same field later succeeds (a Retry), the listener calls `complete` a second time and throws an
+uncaught `StateError`. This is a package defect (see [[cubits]] "One-shot reads"), not a usage
+error, but until it is fixed:
+
+- Only `asFuture` a field once it has loaded, or one that cannot move from error to success
+  while the future is pending (for example a detail screen that is only reachable after the list
+  loaded).
+- In tests, wait for the error on the state stream (`cubit.stream.firstWhere((s) =>
+  s.xF.hasError)`) rather than `expect(... .asFuture(cubit), throwsA(...))`.
+
+`Stream<Progressable>.asFuture` has the same shape but is rarely hit, because the
+`futureAsProgressable` streams it usually wraps end after their error.
+
 ## Related knowledge
 
-- Concepts: [[AbleCubit]] (#1, #3, #4, #7), [[Fetchable]]/[[Progressable]] (#2, #8, #9),
+- Concepts: [[AbleCubit]] (#1, #3, #4, #7, #10), [[Fetchable]]/[[Progressable]] (#2, #8, #9),
   [[ProgressablesResultPresenter]] (#5), [[AbleConfigs]] (#6).
 - Decisions: [[ADR-005-rebuild-alias-for-emit]] (#1), [[ADR-004-centralized-exception-handling]]
   (#6, #8).

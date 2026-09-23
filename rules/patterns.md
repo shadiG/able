@@ -451,9 +451,106 @@ which is likely why `doIf` sees little real use — prefer this style unless `do
 shape (an entirely separate `ifP`/`elseP` stream pair keyed off a `Fetchable<bool>`) genuinely
 fits better."
 
+## 16. A business load method that writes its own field and still returns a `Progressable`
+
+When a business cubit's canonical field must be reloadable on demand (a Retry button, a refresh
+action), put the load in one method that mirrors every step into the field **and** returns a
+`Stream<Progressable>` for the caller:
+
+```dart
+extension CountryLoadingExtension on CountryCubit {
+  Stream<Progressable> loadCountries() => futureAsProgressable(() async {
+        rebuild(state.rebuild((b) => b..countriesF = Fetchable.busy()));
+        try {
+          final countries = await countryRepository.fetchCountries();
+          rebuild(state.rebuild((b) => b..countriesF = countries.asFetchable()));
+        } catch (e) {
+          rebuild(state.rebuild((b) => b..countriesF = Fetchable.error(e)));
+          rethrow;
+        }
+      });
+}
+```
+
+- The business cubit's constructor starts it with `executeSP(loadCountries())`.
+- A view cubit reloads with `executeSP(countryCubit.loadCountries(), then: (p) =>
+  rebuild(state.rebuild((b) => b..reloadP = p)))` and reacts to `reloadP` through a
+  `ProgressablesResultPresenter`.
+- The `rethrow` matters: without it the field shows the error but the caller's `Progressable`
+  reports success.
+
+Reference: `example/country_listing/lib/domain/business/country/function/loading.dart`.
+
+## 17. A live, derived per-screen value from another cubit's field: `.map(mapSuccess)`
+
+When a screen needs a small value computed from a business field (is *this* item a favorite?),
+map the mirrored stream instead of mirroring the whole field and computing in the widget:
+
+```dart
+void _observeIsFavorite() => executeSF(
+      countryCubit
+          .mapFStream((s) => s.favoriteCodesF)
+          .map((favoriteCodesF) => favoriteCodesF.mapSuccess((codes) => codes.contains(countryCode)))
+          .distinct(),
+      then: (isFavoriteF) => rebuild(state.rebuild((b) => b..isFavoriteF = isFavoriteF)),
+      takeOnce: false,
+    );
+```
+
+`mapSuccess` passes idle/busy/error through unchanged, and `.distinct()` after the `map` means the
+screen only rebuilds when the derived `bool` actually flips, not whenever the set changes.
+
+## 18. A dependent load chained on another: `flatMapOnSuccessF` in a view cubit
+
+```dart
+void _initNeighbours() => executeSF(
+      countryCubit.countryByCode(countryCode).flatMapOnSuccessF(countryCubit.neighboursOf),
+      then: (neighboursF) => rebuild(state.rebuild((b) => b..neighboursF = neighboursF)),
+    );
+```
+
+Idle/busy/error of the first stream flow straight into `neighboursF`, so one `FetchableWidget`
+covers both steps. Use this rather than `await`ing the first result inside a
+`futureAsFetchable` when the second query is already a business method returning a stream.
+
+## 19. List rows that carry per-row flags: a record type in the view state
+
+When each row needs data from two business fields (the country and whether it is a favorite),
+derive the rows in the view cubit (item 11) as a `BuiltList` of records, so the widget renders
+exactly one field and never looks anything up:
+
+```dart
+typedef CountryListItem = ({Country country, bool isFavorite});
+
+/// The rows to render, after filtering and sorting by name.
+Fetchable<BuiltList<CountryListItem>> get visibleCountriesF;
+```
+
+Records have structural `==`, so `.distinct()` and `BuiltList` equality still work. The derived
+field is what `FetchableListWidget<CountryListItem>` renders.
+
+## 20. Testing cubits
+
+- Call `Able.initialize` once per test file (`setUpAll(Able.initialize)`); a second call is a
+  harmless no-op.
+- Build the business cubit over a fake repository with `latency: Duration.zero`, then await its
+  first load with the same accessor production code uses (`await cubit.countries`).
+- Drive actions with `.asFuture(cubit)`: `await cubit.toggleFavorite('TG').asFuture(cubit)`; an
+  expected error surfaces as `throwsA(isA<FavoriteLimitReachedException>())`.
+- For derived view-cubit fields, call the input method and let the event loop settle
+  (`await Future<void>.delayed(const Duration(milliseconds: 10))`) before reading
+  `state.xF.data`. Reading `.data` in a test is fine; in production code it is not (item 4).
+- To assert a field *failed*, wait on the state stream (`await cubit.stream.firstWhere((s) =>
+  s.countriesF.hasError)`), not on `.asFuture` — see [[anti-patterns]] #10.
+- Close every cubit you create at the end of the test.
+
+Reference: `example/country_listing/test/`.
+
 ## Related knowledge
 
-- Concepts: all package-internal concepts, plus [[BusinessCubit]] and [[ViewCubit]] (items 9-15
+- Concepts: all package-internal concepts, plus [[BusinessCubit]] and [[ViewCubit]] (items 9-19
   are entirely about those two conventions).
+- Reference implementation: `example/country_listing/` uses items 1-12 and 16-20; its README
+  maps each Able feature to the file that shows it.
 - Decisions: [[ADR-004-centralized-exception-handling]] (item 1, item 7).
 - Graph: `knowledge/graph/graph.json` (node `rule-patterns`)

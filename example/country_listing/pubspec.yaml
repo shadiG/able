@@ -1,0 +1,28 @@
+name: country_listing
+description: Country listing example for the able package.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  able:
+    path: ../..
+  built_collection: ^5.1.1
+  built_value: ^8.11.1
+  flutter_bloc: ^9.1.1
+  rxdart: ^0.28.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.7.0
+  built_value_generator: ^8.11.1
+
+flutter:
+  uses-material-design: true

@@ -13,7 +13,9 @@ stays local and is discarded when the screen is popped, rather than every screen
 cubits directly and re-deriving the same live subscriptions ad hoc.
 
 ## Where it lives
-Not in this repository — observed in telavi_app (e.g. `ContactViewCubit`, `SendCodeViewCubit`).
+Observed in telavi_app (e.g. `ContactViewCubit`, `SendCodeViewCubit`). In this repository:
+`CountryListViewCubit` and `CountryDetailViewCubit` under
+`example/country_listing/lib/presentation/view/*/cubit/`.
 
 ## What it depends on
 - [[AbleCubit]] — every view cubit extends it.
@@ -25,14 +27,14 @@ The screen's widgets ([[FetchableWidget]], [[ProgressablesResultPresenter]], etc
 
 ## Which rules govern it
 - `rules/architecture.md` — "Consuming-app conventions".
-- `rules/patterns.md` items 10, 11, 12, 13.
+- `rules/patterns.md` items 10, 11, 12, 13, 17, 18, 19.
 - `rules/cubits.md` — the `.distinct()` note (load-bearing for exactly this mirroring pattern).
 
 ## Which decisions affect it
 None recorded — observed convention, not a package-level decision.
 
 ## Examples of correct usage
-See `rules/patterns.md` items 10, 11, 12, 13.
+See `rules/patterns.md` items 10, 11, 12, 13, 17, 18, 19, and `example/country_listing/`.
 
 ## Common mistakes
 Forgetting `.distinct()` or `takeOnce: false` when mirroring a business-cubit field — see

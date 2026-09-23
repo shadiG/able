@@ -12,7 +12,7 @@ packages:
   able:
     dependency: "direct dev"
     description:
-      path: ".."
+      path: "../.."
       relative: true
     source: path
     version: "0.0.1"

@@ -17,7 +17,9 @@ can mirror from.
 Not in this repository — this concept documents an architectural role apps built on `able` are
 expected to fill, conventionally at `domain/business/<feature>/<feature>_cubit.dart` plus
 `domain/business/<feature>/function/*.dart`. Evidenced by telavi_app's `ContactCubit`, `AuthCubit`,
-`AppCubit`, `MeasurementCubit`.
+`AppCubit`, `MeasurementCubit`. In this repository: `CountryCubit` in
+`example/country_listing/lib/domain/business/country/` (core file plus `function/extension.dart`,
+`loading.dart`, `favorites.dart`).
 
 ## What it depends on
 - [[AbleCubit]] — every business cubit extends it.
@@ -29,7 +31,7 @@ expected to fill, conventionally at `domain/business/<feature>/<feature>_cubit.d
 
 ## Which rules govern it
 - `rules/architecture.md` — "Consuming-app conventions".
-- `rules/patterns.md` items 9, 10.
+- `rules/patterns.md` items 9, 10, 16.
 
 ## Which decisions affect it
 None recorded — this is an observed convention, not a package-level decision with commit
@@ -37,7 +39,7 @@ evidence. If it should be formalized (e.g. as a requirement rather than an obser
 would be a new ADR for whoever owns the convention across projects.
 
 ## Examples of correct usage
-See `rules/patterns.md` items 9, 10.
+See `rules/patterns.md` items 9, 10, 16, and `example/country_listing/`.
 
 ## Common mistakes
 Adding a method directly to `<feature>_cubit.dart` instead of the matching

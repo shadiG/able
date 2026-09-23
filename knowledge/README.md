@@ -10,8 +10,10 @@ concepts/            WHAT each architectural entity IS — one file per concept,
                       the rules that govern it and the decisions that shaped it.
 decisions/           WHY the architecture is the way it is — ADRs, grounded in real evidence
                       (README text, commit history) or explicitly marked unknown.
-graph/               A machine-readable index of concepts/rules/decisions and how they relate --
-                      for targeted retrieval, not a duplicate of the source code.
+graph/               A machine-readable index of concepts/rules/decisions/examples and how they
+                      relate -- for targeted retrieval, not a duplicate of the source code.
+../example/          Runnable apps. country_listing/ is the reference implementation of the
+                      rules; each app has a README and a matching `example` node in the graph.
 ```
 
 ## How to use this when implementing something
@@ -40,9 +42,12 @@ Consuming-app conventions (observed in practice, not package classes):
 
 ## Known gaps (not decisions — do not treat as intentional)
 
-- **No test suite.** `test/able_test.dart` existed (added in commit `f5d7b65`, a `flutter_test`
-  boilerplate default) and was deleted in commit `1b941b8` ("upgrade library"). The package
-  currently ships `flutter_test`/`mockito`/`build_runner` as dev dependencies but has zero tests.
+- **Thin test suite.** The package has one test file,
+  `test/progressables_result_presenter_test.dart` (commit `b71d85d`). Most behavior is exercised
+  only indirectly, by the tests in `example/country_listing/test/`.
+- **`asFuture` keeps listening after an error** — a third package defect, found while testing
+  `example/country_listing`. See `rules/cubits.md` ("One-shot reads") and
+  `rules/anti-patterns.md` #10.
 - `pubspec.yaml`'s `description:` field ("A new Flutter package project.") and `CHANGELOG.md`
   ("TODO: Describe initial release.") are still the unedited `flutter create --template=package`
   defaults, not a description of what `able` actually is.

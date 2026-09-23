@@ -97,7 +97,7 @@
       "type": "rule",
       "name": "cubits.md",
       "path": "rules/cubits.md",
-      "summary": "AbleCubit API: rebuild, mapFStream/mapPStream, execute*/present*, .distinct()."
+      "summary": "AbleCubit API: rebuild, mapFStream/mapPStream, execute*/present*, .distinct(), asFuture (and its keep-listening-after-error defect)."
     },
     {
       "id": "rule-fetchable",
@@ -111,14 +111,14 @@
       "type": "rule",
       "name": "patterns.md",
       "path": "rules/patterns.md",
-      "summary": "End-to-end recipes: bootstrapping, cubit-writing, rendering, real-world usage patterns."
+      "summary": "End-to-end recipes 1-20: bootstrapping, cubit-writing, rendering, reloadable business loads, derived and chained view-cubit fields, testing."
     },
     {
       "id": "rule-anti-patterns",
       "type": "rule",
       "name": "anti-patterns.md",
       "path": "rules/anti-patterns.md",
-      "summary": "Concrete mistakes to avoid, with the corrected BlocListener nuance."
+      "summary": "Concrete mistakes to avoid, with the corrected BlocListener nuance and the asFuture-after-error pitfall."
     },
     {
       "id": "adr-001",
@@ -154,6 +154,20 @@
       "name": "ADR-005: rebuild() alias for emit()",
       "path": "knowledge/decisions/ADR-005-rebuild-alias-for-emit.md",
       "summary": "Why AbleCubit.rebuild exists as a naming convention over Cubit.emit."
+    },
+    {
+      "id": "example-counter",
+      "type": "example",
+      "name": "counter (example app)",
+      "path": "example/counter/README.md",
+      "summary": "Smallest AbleCubit app: one Fetchable<int> rendered with FetchableWidget."
+    },
+    {
+      "id": "example-country-listing",
+      "type": "example",
+      "name": "country_listing (example app)",
+      "path": "example/country_listing/README.md",
+      "summary": "Reference implementation: business cubit with function/ extensions, two view cubits, derived and live state, expected errors, Able widgets, cubit and widget tests."
     }
   ],
   "edges": [
@@ -418,6 +432,92 @@
       "from": "progressables-result-presenter",
       "relation": "decided_by",
       "to": "adr-004"
+    },
+    {
+      "from": "example-counter",
+      "relation": "uses",
+      "to": "able-cubit"
+    },
+    {
+      "from": "example-counter",
+      "relation": "uses",
+      "to": "fetchable"
+    },
+    {
+      "from": "example-counter",
+      "relation": "uses",
+      "to": "fetchable-widget"
+    },
+    {
+      "from": "example-counter",
+      "relation": "uses",
+      "to": "able-configs"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "uses",
+      "to": "able-configs",
+      "note": "main.dart calls Able.initialize with loadingWidget/errorWidget/handleException"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "uses",
+      "to": "able-cubit"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "uses",
+      "to": "fetchable"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "uses",
+      "to": "progressable"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "uses",
+      "to": "fetchable-widget",
+      "note": "FilterBar, _Summary, detail screen"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "uses",
+      "to": "fetchable-list-widget",
+      "note": "country_list_view.dart renders visibleCountriesF"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "uses",
+      "to": "progressables-result-presenter",
+      "note": "snackbars for reloadP / toggleFavoriteP"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "governed_by",
+      "to": "rule-architecture"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "governed_by",
+      "to": "rule-patterns"
+    },
+    {
+      "from": "example-country-listing",
+      "relation": "governed_by",
+      "to": "rule-cubits"
+    },
+    {
+      "from": "business-cubit",
+      "relation": "documented_by",
+      "to": "example-country-listing",
+      "note": "CountryCubit is the in-repo implementation"
+    },
+    {
+      "from": "view-cubit",
+      "relation": "documented_by",
+      "to": "example-country-listing",
+      "note": "CountryListViewCubit, CountryDetailViewCubit"
     }
   ]
 }

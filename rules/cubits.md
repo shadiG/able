@@ -114,6 +114,14 @@ this is how a business method awaits another cubit's field synchronously
 (`await contactCubit.mapFStream((s) => s.contactsF).asFuture(this)`) or awaits its own dependent
 action mid-flow (`await mapper().asFuture(cubit)` inside `flatMapOnSuccessP`).
 
+> **Known defect** (`able_cubit.dart`, `AbleCubitFStreamExtensions.asFuture`): the subscription
+> is only closed after a *success* (`takeOnceSuccess()`), so after completing the `Future` with an
+> error it keeps listening. If the same field later reaches `success`, `completer.complete` runs a
+> second time and throws `Bad state: Future already completed` as an uncaught error. Found while
+> testing `example/country_listing` (a load that fails once, then succeeds on Retry). The fix
+> belongs in `able` — stop on error as well as success, or guard with `completer.isCompleted` —
+> with a regression test. See [[anti-patterns]] #10 for how to avoid it until then.
+
 ## Streams as sources, not just async values
 
 Because `mapFStream`/`executeSF`/`asFuture` all operate on `Stream<Fetchable<T>>` rather than

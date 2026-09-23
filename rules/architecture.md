@@ -87,6 +87,9 @@ design above. Full write-up with call-order tracing: `knowledge/concepts/Excepti
    it copies `presentF`'s literal instead. Any `handleException` subscriber that branches on
    `type` sees the wrong tag for `Progressable`-originated errors.
 
+A third, unrelated defect — `Stream<Fetchable<T>>.asFuture` keeps listening after completing
+with an error — is described in [[cubits]] ("One-shot reads") and [[anti-patterns]] #10.
+
 These are package-source defects, not usage mistakes — do not work around them in application
 code without first deciding whether to patch `able` itself.
 
@@ -118,6 +121,20 @@ are created per screen, take business cubits as dependencies, and mirror whichev
 that screen needs via `mapFStream(...).distinct()` + `executeSF(..., takeOnce: false)`, adding
 their own screen-local `Fetchable`/`Progressable` fields alongside. See [[patterns]] for the
 concrete recipes this layout enables.
+
+## Example apps in this repository
+
+`example/` holds standalone Flutter apps that depend on `able` through `path: ../..`:
+
+- `example/counter/` — the smallest `AbleCubit`: one `Fetchable<int>`.
+- `example/country_listing/` — the reference implementation of the conventions above: a
+  `CountryCubit` business cubit with `function/` extensions, two view cubits
+  (`CountryListViewCubit`, `CountryDetailViewCubit`), a domain repository interface with an
+  in-memory data implementation, expected errors, Able's widgets, and cubit and widget tests.
+
+When a rule here or in [[patterns]] is unclear, `example/country_listing/` is the in-repo code to
+read. It is kept passing `flutter analyze` and `flutter test`; if you change a rule it
+demonstrates, update the example in the same change.
 
 ## Related knowledge
 

@@ -32,8 +32,8 @@ naming convention.
 
 ## Which rules govern it
 - `rules/cubits.md` — the full API reference, including the `.distinct()` note.
-- `rules/patterns.md` items 2, 3, 4, 9-15.
-- `rules/anti-patterns.md` #1, #3, #4, #7.
+- `rules/patterns.md` items 2, 3, 4, 9-20.
+- `rules/anti-patterns.md` #1, #3, #4, #7, #10.
 
 ## Which decisions affect it
 - [[ADR-001-stream-based-async-state]]
@@ -41,8 +41,10 @@ naming convention.
 - [[ADR-005-rebuild-alias-for-emit]]
 
 ## Examples of correct usage
-See `rules/patterns.md` items 2, 3, 9-15.
+See `rules/patterns.md` items 2, 3, 9-20, and the in-repo reference app
+`example/country_listing/` (`CountryCubit`, `CountryListViewCubit`, `CountryDetailViewCubit`).
 
 ## Common mistakes
 See `rules/anti-patterns.md` #1 (`then:` that never calls `rebuild`), #4 (missing
-`takeOnce: false`), and `rules/cubits.md`'s `.distinct()` note.
+`takeOnce: false`), #10 (`.asFuture` on a field that errors then recovers — a package
+defect, see `rules/cubits.md` "One-shot reads"), and `rules/cubits.md`'s `.distinct()` note.

@@ -22,7 +22,10 @@ consistently with everything established so far. That is this file's job.
 
 ```
 lib/                  The package itself — always authoritative for exact behavior.
-test/                 Currently empty — see "Known gaps" below.
+test/                 One test file so far — see "Known gaps" below.
+example/
+  counter/             Smallest possible AbleCubit app.
+  country_listing/     Reference implementation of every rule: business + view cubits, tests.
 rules/                NORMATIVE. MUST/SHOULD/MUST NOT usage rules. Concise, actionable.
 knowledge/
   concepts/            WHAT each architectural entity is, one file per concept.
@@ -73,13 +76,15 @@ newly discovered one the same way: document it, don't quietly normalize it.
 7. **Implement the change**, following the applicable rules and matching the patterns already
    established (see `rules/patterns.md` for consuming-app conventions like the business-cubit/
    view-cubit split).
-8. **Check whether the change introduces:**
+8. **If the change affects a documented pattern**, update `example/country_listing/` to match and
+   run `flutter analyze` and `flutter test` there.
+9. **Check whether the change introduces:**
    - a new architectural rule (a pattern that should now be mandatory project-wide),
    - a new reusable pattern (worth a `rules/patterns.md` recipe),
    - a new concept (a new architectural abstraction worth its own `knowledge/concepts/*.md`),
    - a new architectural decision (worth an ADR),
    - a new dependency relationship (worth a `knowledge/graph/graph.json` edge).
-9. **Update the knowledge base when appropriate** — see "Knowledge maintenance" below. Retrieval
+10. **Update the knowledge base when appropriate** — see "Knowledge maintenance" below. Retrieval
    happens *before* implementation; maintenance happens *after*.
 
 ## Discoverability — narrowing a task to the right knowledge
@@ -98,7 +103,8 @@ narrowing:
 ```
 "Add a repository-backed feature to a consuming app"
   -> knowledge/concepts/BusinessCubit.md, knowledge/concepts/ViewCubit.md
-  -> rules/architecture.md ("Consuming-app conventions"), rules/patterns.md items 9-15
+  -> rules/architecture.md ("Consuming-app conventions"), rules/patterns.md items 9-20
+  -> example/country_listing/ (working code for the whole shape, with tests)
   -> (no ADR — these are observed conventions, not package-level decisions; see
       knowledge/decisions/README.md's "What is not here")
 ```
@@ -151,10 +157,12 @@ When you do update:
 
 ## Known gaps (flagged, not silently worked around)
 
-- **No test suite.** `test/` is empty; a boilerplate `test/able_test.dart` existed briefly and was
-  deleted in commit `1b941b8`. If you add meaningful behavior, consider whether it should be the
-  first real test in this package — but this knowledge base does not treat "add tests" as
-  self-evidently in scope for every change.
+- **Thin test suite.** `test/` holds only `progressables_result_presenter_test.dart`. The
+  example apps' tests (`example/*/test/`) cover more of the API in practice; run them after a
+  package change.
+- **`Stream<Fetchable<T>>.asFuture` keeps listening after an error**, so a later success throws
+  `Future already completed`. Found while testing `example/country_listing`; documented in
+  `rules/cubits.md` and `rules/anti-patterns.md` #10, not fixed yet.
 - Two verified defects in the exception-handling path — see
   `knowledge/concepts/ExceptionHandler.md` and `rules/architecture.md`'s "Known defects" note.
   Not fixed here; fixing them changes runtime behavior of a published package dependency and
