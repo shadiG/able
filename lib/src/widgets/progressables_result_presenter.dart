@@ -22,7 +22,7 @@ class ProgressableResultPresenter<S> {
 
 class ProgressablesResultPresenter<C extends AbleCubit<S>, S> extends StatefulWidget {
   final Widget child;
-  final List<ProgressableResultPresenter> presenters;
+  final List<ProgressableResultPresenter<S>> presenters;
 
   const ProgressablesResultPresenter({
     required this.presenters,
