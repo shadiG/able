@@ -30,8 +30,8 @@ void main() {
   test('stores a load failure on countriesF, and a reload recovers', () async {
     final cubit = createCubit(failuresBeforeSuccess: 1);
 
-    final failed = await cubit.stream.firstWhere((s) => s.countriesF.hasError);
-    expect(failed.countriesF.error, isA<CountryLoadException>());
+    await expectLater(cubit.countries, throwsA(isA<CountryLoadException>()));
+    expect(cubit.state.countriesF.hasError, isTrue);
 
     await cubit.loadCountries().asFuture(cubit);
     expect(cubit.state.countriesF.data, countriesData);

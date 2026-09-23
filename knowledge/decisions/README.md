@@ -15,12 +15,13 @@ instead of inventing a plausible-sounding rationale.
 | [ADR-003](ADR-003-dynamic-typed-errors.md) | Error payloads are typed `dynamic` | Accepted |
 | [ADR-004](ADR-004-centralized-exception-handling.md) | Centralized `ExceptionHandler` + `Able.initialize` | Accepted |
 | [ADR-005](ADR-005-rebuild-alias-for-emit.md) | `rebuild()` as the sanctioned alias for `emit()` | Accepted |
+| [ADR-006](ADR-006-errors-win-when-combining.md) | Errors take precedence when combining states | Accepted |
 
 ## What is *not* here
 
 No ADR exists for: the `combine7F`/`combine8F`/`combine9F` state-summation bug (a defect, not a
-decision — see `rules/fetchable.md` and `rules/anti-patterns.md` #7), the two `ExceptionHandler`
-defects documented in `knowledge/concepts/ExceptionHandler.md` (also defects, not decisions), the
+decision, fixed in 0.1.0 — see `rules/fetchable.md`), the two `ExceptionHandler` defects
+documented in `knowledge/concepts/ExceptionHandler.md` (also defects, fixed in 0.1.0), the
 default `takeOnce: true` (no repository evidence for why `true` was chosen over `false`), or the
 [[BusinessCubit]]/[[ViewCubit]] consuming-app conventions (real, evidenced patterns, but not
 package-level decisions with a traceable rationale in this repository).

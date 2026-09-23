@@ -29,8 +29,7 @@ type, with structural equality, combinators, and dedicated widgets.
 - [[BusinessCubit]], [[ViewCubit]] conventions.
 
 ## Which rules govern it
-- `rules/fetchable.md` — full API reference, including the documented `combine7F`/`combine8F`/
-  `combine9F` state-summation bug.
+- `rules/fetchable.md` — full API reference.
 - `rules/state-management.md` — the four-state model and field-naming convention.
 - `rules/patterns.md` items 11, 12, 14 — deriving fields, widget-level combining,
   `value.asFetchable()` as the everyday setter.
@@ -47,6 +46,4 @@ See `rules/patterns.md` items 2, 5, 11, 12, 14.
 
 ## Common mistakes
 See `rules/anti-patterns.md` #2 (hand-rolled loading/error/data fields), #3 (branching on the
-concrete subclass), #7 (trusting `combine7F`/`combine8F`/`combine9F`'s combined state exactly —
-verified against `lib/src/fetchable/fetchable_utils.dart`: `combine7F`'s `state:` expression sums
-`f1..f5` and `f7` but omits `f6.state`; `combine8F`/`combine9F` have the same omission).
+concrete subclass). (#7, the `combine7F`–`combine9F` state bug, was fixed in 0.1.0.)

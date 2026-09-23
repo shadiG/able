@@ -22,7 +22,7 @@ consistently with everything established so far. That is this file's job.
 
 ```
 lib/                  The package itself — always authoritative for exact behavior.
-test/                 One test file so far — see "Known gaps" below.
+test/                 Regression tests for the 0.1.0 fixes, plus presenter tests.
 example/
   counter/             Smallest possible AbleCubit app.
   country_listing/     Reference implementation of every rule: business + view cubits, tests.
@@ -51,10 +51,10 @@ If the source code contradicts a rule, do not treat the code as automatically co
 treat the rule as automatically correct either. State it plainly: "Rule says X. Current
 implementation does Y. This is a knowledge inconsistency." Then work out whether the code should
 change to match the rule, or the rule should change because the architecture intentionally moved
-on — and say which, with evidence. Two such inconsistencies are already known and documented
-rather than resolved — see `knowledge/concepts/ExceptionHandler.md`'s "Known defect 1" and
-"Known defect 2", and `rules/fetchable.md`'s `combine7F`/`combine8F`/`combine9F` bug. Treat any
-newly discovered one the same way: document it, don't quietly normalize it.
+on — and say which, with evidence. Earlier inconsistencies of this kind (the `ExceptionHandler`
+defects, the `combine7F`–`combine9F` bug, `asFuture` after an error) were documented first, then
+fixed in 0.1.0 with regression tests in `test/regression_test.dart`; their history stays in the
+docs. Treat any newly discovered one the same way: document it, don't quietly normalize it.
 
 ## Workflow for a task
 
@@ -157,17 +157,11 @@ When you do update:
 
 ## Known gaps (flagged, not silently worked around)
 
-- **Thin test suite.** `test/` holds only `progressables_result_presenter_test.dart`. The
-  example apps' tests (`example/*/test/`) cover more of the API in practice; run them after a
-  package change.
-- **`Stream<Fetchable<T>>.asFuture` keeps listening after an error**, so a later success throws
-  `Future already completed`. Found while testing `example/country_listing`; documented in
-  `rules/cubits.md` and `rules/anti-patterns.md` #10, not fixed yet.
-- Two verified defects in the exception-handling path — see
-  `knowledge/concepts/ExceptionHandler.md` and `rules/architecture.md`'s "Known defects" note.
-  Not fixed here; fixing them changes runtime behavior of a published package dependency and
-  should be a deliberate decision, not a side effect of a documentation pass.
-- `pubspec.yaml`'s `description:` and `CHANGELOG.md` still hold `flutter create` boilerplate text.
+- **Test coverage is still partial.** `test/regression_test.dart` covers the 0.1.0 bug fixes;
+  most other behavior is exercised only by the example apps' tests (`example/*/test/`). Run all
+  of them after a package change.
+- The stream-receiver `stream.executeF(cubit, ...)`/`stream.executeP(cubit, ...)` extensions are
+  deprecated (they ignore the stream) and should be removed in a later breaking release.
 
 ## Important distinctions
 

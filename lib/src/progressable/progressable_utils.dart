@@ -24,7 +24,7 @@ extension ProgressableExtension on Progressable {
       }();
 }
 
-/// represents Future as Stream<Progressable>
+/// Represents a `Future` as a `Stream<Progressable>`: busy, then success.
 Stream<Progressable> futureAsProgressable(Future Function() func) async* {
   yield Progressable.busy();
   await func();

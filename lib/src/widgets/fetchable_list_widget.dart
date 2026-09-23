@@ -44,7 +44,7 @@ class FetchableListWidget<D> extends BaseFetchableListWidget<D> {
           ? const SliverFillRemaining(child: SizedBox())
           : const SliverToBoxAdapter(child: SizedBox());
     }
-    if (fetchable.error != null) {
+    if (fetchable.hasError) {
       final errorContent = (buildError != null
           ? buildError!(context, fetchable.error)
           : (Able.configs.errorWidget != null

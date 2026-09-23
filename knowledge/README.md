@@ -32,8 +32,8 @@ Package-internal (defined in `lib/src/**`):
 - `concepts/Progressable.md` — async state without a result.
 - `concepts/AbleCubit.md` — the base cubit class and its `execute*`/`present*`/`rebuild` API.
 - `concepts/AbleConfigs.md` — `Able.initialize`/`Able.configs`.
-- `concepts/ExceptionHandler.md` — the shared error-routing singleton (**documents two verified
-  defects — read this one if you're touching error handling**).
+- `concepts/ExceptionHandler.md` — the shared error-routing singleton (with the history of two
+  error-routing defects fixed in 0.1.0).
 - `concepts/FetchableWidget.md`, `concepts/FetchableListWidget.md` — rendering.
 - `concepts/ProgressablesResultPresenter.md` — one-shot success/error side effects.
 
@@ -42,14 +42,8 @@ Consuming-app conventions (observed in practice, not package classes):
 
 ## Known gaps (not decisions — do not treat as intentional)
 
-- **Thin test suite.** The package has one test file,
-  `test/progressables_result_presenter_test.dart` (commit `b71d85d`). Most behavior is exercised
-  only indirectly, by the tests in `example/country_listing/test/`.
-- **`asFuture` keeps listening after an error** — a third package defect, found while testing
-  `example/country_listing`. See `rules/cubits.md` ("One-shot reads") and
-  `rules/anti-patterns.md` #10.
-- `pubspec.yaml`'s `description:` field ("A new Flutter package project.") and `CHANGELOG.md`
-  ("TODO: Describe initial release.") are still the unedited `flutter create --template=package`
-  defaults, not a description of what `able` actually is.
+- **Test coverage is still partial.** `test/regression_test.dart` covers the 0.1.0 bug fixes and
+  `test/progressables_result_presenter_test.dart` the presenter's typing. Most other behavior is
+  exercised only by `example/country_listing/test/`.
 
 These are flagged, not silently fixed, here — see the session's final report for why.

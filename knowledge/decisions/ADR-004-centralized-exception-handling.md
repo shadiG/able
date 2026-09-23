@@ -27,10 +27,9 @@ requiring each call site to wire its own logging/crash-reporting/toast handling.
   `rules/patterns.md` item 1.
 - Reading `Able.configs` before `initialize()` throws; a second `initialize()` call is a silent
   no-op (`rules/anti-patterns.md` #6).
-- **This design has two verified implementation defects that undermine part of its own intent --
-  see [[ExceptionHandler]]'s "Known defect 1" and "Known defect 2".** The centralization decision
-  itself is sound; the `ExceptionHandler` factory constructor's handling of the `onError` field,
-  and `presentP`'s `AbleType` tagging, do not correctly implement it.
+- Two implementation defects undermined part of this design until 0.1.0: the factory
+  constructor cleared `onError`, and `presentP` mistagged `AbleType`. Both are fixed; see
+  [[ExceptionHandler]]'s "Fixed defects (history)". The decision itself was unaffected.
 
 ## Alternatives
 Not documented in the repository. The revert/re-revert shows the design was reconsidered, but no

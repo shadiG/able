@@ -1,10 +1,13 @@
 name: able
-description: A new Flutter package project.
-version: 0.0.1
+description: >-
+  Async state management for Flutter on top of flutter_bloc: Fetchable and
+  Progressable value types, AbleCubit execution helpers, and widgets that
+  render them.
+version: 0.1.0
 
 environment:
-  sdk: '>=3.0.0'
-  flutter: ">=1.17.0"
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
 
 dependencies:
   flutter:

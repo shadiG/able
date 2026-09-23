@@ -127,13 +127,11 @@ Calling `initialize()` a second time is *not* an error, but it's also not applie
 configuration is kept and a `debugPrint` warning is emitted, which is easy to miss in a release
 build's silenced debug output.
 
-## 7. Combining 7–9 `Fetchable`s and trusting the overall state exactly
+## 7. (Fixed in 0.1.0) Combining 7–9 `Fetchable`s and trusting the overall state
 
-`combine7F`, `combine8F`, and `combine9F` have a state-summation bug (documented in
-[[fetchable]]): they drop `f6.state` (and further terms for 8/9) from the combined `AbleState`.
-Don't rely on the combined state being accurate when exactly one of the dropped positions is the
-only non-success input among 7+ combined `Fetchable`s. Prefer nesting `combine2F`/`combine3F`, or
-keep single combine calls to 6 or fewer inputs, when this matters.
+`combine7F`, `combine8F` and `combine9F` used to leave `f6.state` out of the combined state. They
+sum every input since 0.1.0, so this is no longer a pitfall. Kept here so the numbering of the
+other items stays stable.
 
 ## 8. Treating every error as unexpected
 
@@ -157,27 +155,12 @@ reflect later `rebuild` calls. It won't: every `rebuild` replaces the whole `Sta
 previously-read `Fetchable` reference is a frozen snapshot. Always re-read the field from
 `state`/`context.select` rather than holding onto an old `Fetchable`/`Progressable` value.
 
-## 10. Awaiting `.asFuture` on a `Fetchable` field that can fail and later recover
+## 10. (Fixed in 0.1.0) Awaiting `.asFuture` on a field that can fail and later recover
 
-```dart
-// RISKY — throws "Bad state: Future already completed" if countriesF errors, then succeeds
-final countries = await mapFStream((s) => s.countriesF).asFuture(this);
-```
-
-`Stream<Fetchable<T>>.asFuture` completes its `Future` with the error on the first
-`Fetchable.error`, but it keeps listening: `takeOnceSuccess()` only stops after a *success*. When
-the same field later succeeds (a Retry), the listener calls `complete` a second time and throws an
-uncaught `StateError`. This is a package defect (see [[cubits]] "One-shot reads"), not a usage
-error, but until it is fixed:
-
-- Only `asFuture` a field once it has loaded, or one that cannot move from error to success
-  while the future is pending (for example a detail screen that is only reachable after the list
-  loaded).
-- In tests, wait for the error on the state stream (`cubit.stream.firstWhere((s) =>
-  s.xF.hasError)`) rather than `expect(... .asFuture(cubit), throwsA(...))`.
-
-`Stream<Progressable>.asFuture` has the same shape but is rarely hit, because the
-`futureAsProgressable` streams it usually wraps end after their error.
+Before 0.1.0, `asFuture` kept listening after completing with an error, so a later success on the
+same field threw `Bad state: Future already completed`. It now stops at the first success or
+error, so awaiting a field that errors and then recovers (a Retry) is safe. Kept here so the
+numbering of the other items stays stable.
 
 ## Related knowledge
 

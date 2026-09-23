@@ -26,16 +26,17 @@ Nothing — this is the package's most primitive type.
 
 ## Which rules govern it
 - `rules/state-management.md` ("The four-state model" section) — the authoritative description of
-  what each case means and how `+` orders them (idle beats busy beats error beats success).
+  what each case means and how `+` orders them (error beats idle beats busy beats success, since 0.1.0 — see
+  [[ADR-006-errors-win-when-combining]]).
 
 ## Which decisions affect it
-None specific to `AbleState` itself — see [[Fetchable]] and [[Progressable]] for the decisions
-built on top of it.
+- [[ADR-006-errors-win-when-combining]] — why an error takes precedence in `+`.
+- See [[Fetchable]] and [[Progressable]] for the decisions built on top of it.
 
 ## Examples of correct usage
 ```dart
 if (fetchable.hasError) { ... }        // prefer this
-final combined = f1.state + f2.state;  // idle beats busy beats error beats success
+final combined = f1.state + f2.state;  // error beats idle beats busy beats success
 ```
 
 ## Common mistakes

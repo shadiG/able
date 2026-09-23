@@ -63,35 +63,34 @@ abstract class Fetchable<D> {
     }
   }
 
+  /// Equal when the state and payload are equal. The type argument is
+  /// ignored, so `Fetchable<int?>.success(null) == Fetchable<Null>.success(null)`.
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other.runtimeType != runtimeType) return false;
+    if (other is! Fetchable || other.state != state) return false;
 
-    return other is Fetchable<D> && other.state == state && () {
-      switch (state) {
-        case AbleState.success:
-          return (this as SuccessFetchable<D>).data == (other as SuccessFetchable<D>).data;
-        case AbleState.error:
-          return (this as ErrorFetchable<D>).exception == (other as ErrorFetchable<D>).exception;
-        case AbleState.idle:
-        case AbleState.busy:
-          return true;
-      }
-    }();
+    switch (state) {
+      case AbleState.success:
+        return (this as SuccessFetchable).data == (other as SuccessFetchable).data;
+      case AbleState.error:
+        return (this as ErrorFetchable).exception == (other as ErrorFetchable).exception;
+      case AbleState.idle:
+      case AbleState.busy:
+        return true;
+    }
   }
 
   @override
   int get hashCode {
     switch (state) {
       case AbleState.idle:
-        return Object.hash(runtimeType, state);
       case AbleState.busy:
-        return Object.hash(runtimeType, state);
+        return state.hashCode;
       case AbleState.success:
-        return Object.hash(runtimeType, state, (this as SuccessFetchable<D>).data);
+        return Object.hash(state, (this as SuccessFetchable).data);
       case AbleState.error:
-        return Object.hash(runtimeType, state, (this as ErrorFetchable<D>).exception);
+        return Object.hash(state, (this as ErrorFetchable).exception);
     }
   }
 
@@ -130,14 +129,9 @@ Fetchable<D> toFetchable<D>({required AbleState state, D? data, dynamic exceptio
     case AbleState.busy:
       return BusyFetchable<D>();
     case AbleState.success:
-      if (data == null) {
-        throw ArgumentError.notNull('data');
-      }
-      return SuccessFetchable<D>(data: data);
+      return SuccessFetchable<D>(data: data as D);
     case AbleState.error:
-      if (exception == null) {
-        throw ArgumentError.notNull('exception');
-      }
+      // The exception may legitimately be null (`Fetchable.error(null)`).
       return ErrorFetchable<D>(exception: exception);
   }
 }

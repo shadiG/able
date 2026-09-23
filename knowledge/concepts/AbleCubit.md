@@ -46,5 +46,4 @@ See `rules/patterns.md` items 2, 3, 9-20, and the in-repo reference app
 
 ## Common mistakes
 See `rules/anti-patterns.md` #1 (`then:` that never calls `rebuild`), #4 (missing
-`takeOnce: false`), #10 (`.asFuture` on a field that errors then recovers — a package
-defect, see `rules/cubits.md` "One-shot reads"), and `rules/cubits.md`'s `.distinct()` note.
+`takeOnce: false`), and `rules/cubits.md`'s `.distinct()` note.

@@ -21,9 +21,8 @@ as two distinct type hierarchies sharing [[AbleState]], rather than a single gen
   `Fetchable<D?>` success case holding a `null` payload.
 - Two parallel combinator families (`combine2F`..`combine9F`, `combine2P`..`combine9P`) and two
   parallel sets of list-aggregate extensions (`allSuccess`/`anyBusy`/etc.) must be maintained --
-  this is also where the [[Fetchable]]-only `combine7F`/`combine8F`/`combine9F` state-summation
-  bug lives; the `Progressable` equivalents do not have it (verified against
-  `progressable_utils.dart`).
+  this duplication is where the [[Fetchable]]-only `combine7F`/`combine8F`/`combine9F`
+  state-summation bug lived until 0.1.0 (the `Progressable` equivalents never had it).
 - Only `Fetchable`/`Fetchable<BuiltList<D>>` have dedicated rendering widgets
   ([[FetchableWidget]]/[[FetchableListWidget]]); `Progressable` is rendered only via
   [[ProgressablesResultPresenter]]'s side-effect model, never inline — an app that needs to show a

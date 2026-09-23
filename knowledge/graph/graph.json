@@ -41,7 +41,7 @@
       "type": "concept",
       "name": "ExceptionHandler",
       "path": "knowledge/concepts/ExceptionHandler.md",
-      "summary": "Shared error-routing singleton. Documents two verified defects."
+      "summary": "Shared error-routing singleton. Keeps the history of two defects fixed in 0.1.0."
     },
     {
       "id": "fetchable-widget",
@@ -97,14 +97,14 @@
       "type": "rule",
       "name": "cubits.md",
       "path": "rules/cubits.md",
-      "summary": "AbleCubit API: rebuild, mapFStream/mapPStream, execute*/present*, .distinct(), asFuture (and its keep-listening-after-error defect)."
+      "summary": "AbleCubit API: rebuild, mapFStream/mapPStream, execute*/present*, .distinct(), asFuture."
     },
     {
       "id": "rule-fetchable",
       "type": "rule",
       "name": "fetchable.md",
       "path": "rules/fetchable.md",
-      "summary": "Full Fetchable<D>/Progressable API reference, including the combine7F/8F/9F bug."
+      "summary": "Full Fetchable<D>/Progressable API reference."
     },
     {
       "id": "rule-patterns",
@@ -118,7 +118,7 @@
       "type": "rule",
       "name": "anti-patterns.md",
       "path": "rules/anti-patterns.md",
-      "summary": "Concrete mistakes to avoid, with the corrected BlocListener nuance and the asFuture-after-error pitfall."
+      "summary": "Concrete mistakes to avoid, with the corrected BlocListener nuance."
     },
     {
       "id": "adr-001",
@@ -154,6 +154,13 @@
       "name": "ADR-005: rebuild() alias for emit()",
       "path": "knowledge/decisions/ADR-005-rebuild-alias-for-emit.md",
       "summary": "Why AbleCubit.rebuild exists as a naming convention over Cubit.emit."
+    },
+    {
+      "id": "adr-006",
+      "type": "decision",
+      "name": "ADR-006: Errors win when combining states",
+      "path": "knowledge/decisions/ADR-006-errors-win-when-combining.md",
+      "summary": "Why AbleState.+ lets an error take precedence over idle and busy (0.1.0)."
     },
     {
       "id": "example-counter",
@@ -245,7 +252,7 @@
       "from": "progressables-result-presenter",
       "relation": "uses",
       "to": "exception-handler",
-      "note": "reads ExceptionHandler().onError for unsuppressed errors — see ExceptionHandler known defect 1"
+      "note": "reads ExceptionHandler().onError for errors not suppressed by shouldIgnoreMessage"
     },
     {
       "from": "business-cubit",
@@ -518,6 +525,21 @@
       "relation": "documented_by",
       "to": "example-country-listing",
       "note": "CountryListViewCubit, CountryDetailViewCubit"
+    },
+    {
+      "from": "able-state",
+      "relation": "decided_by",
+      "to": "adr-006"
+    },
+    {
+      "from": "fetchable",
+      "relation": "decided_by",
+      "to": "adr-006"
+    },
+    {
+      "from": "progressable",
+      "relation": "decided_by",
+      "to": "adr-006"
     }
   ]
 }

@@ -40,7 +40,7 @@ lib/
 | `futureAsProgressable` / `futureAsFetchable` (business methods return streams) | `function/loading.dart`, `favorites.dart`, `extension.dart` |
 | `mapFStream(...).asFuture(this)` (await a resolved value) | `CountryCubitExtension.countries` / `favoriteCodes` |
 | Live mirror: `executeSF(..., takeOnce: false)` + `.distinct()` | `CountryListViewCubit._observeCountries` |
-| Derived field: `combine5FStreams` + `flatMapOnSuccessF` | `CountryListViewCubit._initVisibleCountries` |
+| Derived field: `combine5FStreams` + `switchMapOnSuccessF` | `CountryListViewCubit._initVisibleCountries` |
 | Chained load: `flatMapOnSuccessF` | `CountryDetailViewCubit._initNeighbours` |
 | `mapSuccess` | `CountryDetailViewCubit._observeIsFavorite` |
 | `executeSP` + `isExpectedError` | `toggleFavorite` in both view cubits |
@@ -50,4 +50,4 @@ lib/
 | `[aP, bP].anyBusy` | list app bar progress bar |
 | `ProgressablesResultPresenter` (snackbar on success/error) | both views |
 
-`Able.initialize`'s `onError` isn't used because of a known Able defect: every internal `ExceptionHandler()` call resets it to `null`. The screens handle errors in each presenter's own `onError` instead.
+`Able.initialize`'s `onError` isn't set, because each screen already shows its errors in its presenter's own `onError`. Setting both would show every non-ignored error twice.

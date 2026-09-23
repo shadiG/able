@@ -14,13 +14,14 @@ State transitions in an `able`-based cubit go through `AbleCubit.rebuild(State)`
 `emit` alias — rather than calling `Cubit.emit` directly.
 
 ## Consequences
-- Purely a naming/readability convention: `rebuild(state.rebuild((b) => ...))` reads consistently,
+- Mainly a naming/readability convention: `rebuild(state.rebuild((b) => ...))` reads consistently,
   pairing `AbleCubit.rebuild` (sets cubit state) with the `Built` value's own `.rebuild(...)`
   (produces the next immutable state) at the same call site.
-- No behavioral difference from calling `emit` directly — `rebuild` is a pure delegation — so
-  nothing breaks at runtime if a cubit calls `emit` instead, but it breaks the vocabulary
-  `rules/anti-patterns.md` #1 is written against, and makes the codebase's cubits look
-  inconsistent.
+- Until 0.1.0 there was no behavioral difference from calling `emit`. Since 0.1.0 `rebuild`
+  does nothing once the cubit is closed, while `emit` throws, so async work that finishes after
+  its screen is gone is safe only through `rebuild`. A cubit that calls `emit` directly also
+  breaks the vocabulary `rules/anti-patterns.md` #1 is written against, and makes the codebase's
+  cubits look inconsistent.
 
 ## Alternatives
 Not documented in the repository.

@@ -18,8 +18,10 @@ replacing ad hoc `BlocListener`s that would each reimplement transition-detectio
 - [[Progressable]] — the value it diffs.
 - [[AbleCubit]] — generic bound `C extends AbleCubit<S>`; reads `context.read<C>()` and `.stream`
   directly (bypassing `mapPStream`).
-- [[ExceptionHandler]] — calls `.onError` for errors not suppressed by `shouldIgnoreMessage`.
-  **See [[ExceptionHandler]]'s "Known defect 1" — this call is dead code in practice.**
+- [[ExceptionHandler]] — calls `.onError` for errors not suppressed by `shouldIgnoreMessage`
+  (reachable since 0.1.0; see [[ExceptionHandler]]'s fixed defect 1). It subscribes to the cubit
+  in `initState` (since 0.1.0; before, it waited for the first frame and missed earlier changes)
+  and reports `Progressable.error(null)` too.
 
 ## What depends on it
 Nothing inside the package.

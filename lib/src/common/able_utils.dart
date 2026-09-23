@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:able/able.dart';
 import 'package:rxdart/rxdart.dart';
 
-Stream<Progressable> emptyP = futureAsProgressable(() async => null);
+/// A [Progressable] stream that succeeds immediately. A new stream on every
+/// read, so it can be listened to any number of times.
+Stream<Progressable> get emptyP => futureAsProgressable(() async => null);
 
 extension ProgressableStreamExtensions on Stream<Progressable> {
   Stream<Progressable> flatMapOnSuccessP(AbleCubit cubit, Stream<Progressable> Function() mapper) {
@@ -19,7 +21,7 @@ extension FetchableExtensionOnType<T> on T {
 }
 
 extension ProgressableFunctionExtensions on Function() {
-  Stream<Progressable> asProgressable() => futureAsProgressable(() async => this);
+  Stream<Progressable> asProgressable() => futureAsProgressable(() async => this());
 }
 
 extension FetchableFunctionExtensions<T> on T Function() {
@@ -32,8 +34,27 @@ extension AbleFutureExtensions<T> on Future<T> {
 }
 
 extension FetchableStreamExtensions<T> on Stream<Fetchable<T>> {
+  /// Maps each success to [mapper]'s stream; other states pass through.
+  /// Every inner stream runs to completion, even after a newer upstream value.
   Stream<Fetchable<S>> flatMapOnSuccessF<S>(Stream<Fetchable<S>> Function(T value) mapper) {
     return flatMap((f) {
+      if (f.success) {
+        return mapper(f.data);
+      } else {
+        return Stream.value(f.cast<S>());
+      }
+    });
+  }
+
+  /// Like [flatMapOnSuccessF], but a new upstream value cancels the previous
+  /// inner stream, so a slow result for an old input can't overwrite a newer
+  /// one. Use it for derived values such as search results.
+  ///
+  /// Don't use it when the source is fed by the result itself (for example a
+  /// cubit's own field that the result is written back to): the write-back
+  /// cancels the inner stream before it finishes.
+  Stream<Fetchable<S>> switchMapOnSuccessF<S>(Stream<Fetchable<S>> Function(T value) mapper) {
+    return switchMap((f) {
       if (f.success) {
         return mapper(f.data);
       } else {

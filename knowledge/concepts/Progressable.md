@@ -48,7 +48,5 @@ See `rules/anti-patterns.md` #5 (`BlocListener` vs `ProgressablesResultPresenter
 clarified exception) and #8 (treating every error as unexpected instead of using
 `isExpectedError`).
 
-Unlike `combine7F`/`combine8F`/`combine9F` (see [[Fetchable]]), `combine7P`/`combine8P`/
-`combine9P` do **not** have the missing-state-term bug — verified directly against
-`lib/src/progressable/progressable_utils.dart`, where every `combineNP` sums all `N` state terms
-correctly.
+`combine2P`..`combine9P` sum every input's state (they never had the `combine7F`–`combine9F`
+bug fixed in 0.1.0).

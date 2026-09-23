@@ -35,7 +35,7 @@ class FetchableWidget<D> extends BaseFetchableWidget<D> {
     if (fetchable.idle && !treatIdleAsBusy) {
       return const SizedBox();
     }
-    if (fetchable.error != null) {
+    if (fetchable.hasError) {
       if (buildError != null) {
         return buildError!(context, fetchable.error);
       } else {

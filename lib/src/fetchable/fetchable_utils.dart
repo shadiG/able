@@ -32,7 +32,7 @@ extension FetchableExtension<D> on Fetchable<D> {
       }();
 }
 
-/// represents Future<D> as Stream<Fetchable<D>>
+/// Represents a `Future<D>` as a `Stream<Fetchable<D>>`: busy, then success.
 Stream<Fetchable<D>> futureAsFetchable<D>(
   Future<D> Function() func,
 ) async* {
@@ -42,7 +42,7 @@ Stream<Fetchable<D>> futureAsFetchable<D>(
   // errors are processed by a stream
 }
 
-/// represents Stream<D> as Stream<Fetchable<D>>
+/// Represents a `Stream<D>` as a `Stream<Fetchable<D>>`: busy, then one success per event.
 Stream<Fetchable<D>> streamAsFetchable<D>(Stream<D> Function() func) async* {
   yield Fetchable<D>.busy();
   yield* func().map((event) => Fetchable<D>.success(event));
@@ -156,7 +156,7 @@ Fetchable<(T1, T2, T3, T4, T5, T6, T7)> combine7F<T1, T2, T3, T4, T5, T6, T7>({
             f7.success
         ? (f1.data, f2.data, f3.data, f4.data, f5.data, f6.data, f7.data)
         : null,
-    state: f1.state + f2.state + f3.state + f4.state + f5.state + f7.state,
+    state: f1.state + f2.state + f3.state + f4.state + f5.state + f6.state + f7.state,
     exception: f1.hasError ||
             f2.hasError ||
             f3.hasError ||
@@ -211,6 +211,7 @@ Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8)>
         f3.state +
         f4.state +
         f5.state +
+        f6.state +
         f7.state +
         f8.state,
     exception: f1.hasError ||
@@ -272,6 +273,7 @@ Fetchable<(T1, T2, T3, T4, T5, T6, T7, T8, T9)>
         f3.state +
         f4.state +
         f5.state +
+        f6.state +
         f7.state +
         f8.state +
         f9.state,

@@ -46,8 +46,6 @@ void main() {
   `debugPrint` warning (easy to miss in a release build).
 - Reading `Able.configs` before `initialize()` runs — throws an assertion error.
 
-## Known defect (verified against source)
-The `onError` callback passed here is, in practice, never invoked by
-[[ProgressablesResultPresenter]]. See [[ExceptionHandler]] for the verified root cause. This is a
-package-source defect, not a usage mistake — do not "fix" it with application-code workarounds
-without first deciding (with whoever owns the `able` package) whether to patch the package itself.
+## Fixed defect (0.1.0)
+Before 0.1.0 the `onError` callback passed here was never invoked, because every bare
+`ExceptionHandler()` call cleared it. Fixed; see [[ExceptionHandler]] for the history.

@@ -8,8 +8,12 @@ class ExceptionHandler {
 
   static final ExceptionHandler _handler = ExceptionHandler._internal();
 
+  /// Returns the singleton. [onError] replaces the stored callback only when
+  /// given, so obtaining the handler elsewhere never clears it.
   factory ExceptionHandler({OnError? onError}) {
-    _handler.onError = onError;
+    if (onError != null) {
+      _handler.onError = onError;
+    }
     return _handler;
   }
 

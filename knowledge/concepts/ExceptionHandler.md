@@ -38,14 +38,17 @@ Application code never constructs `ExceptionHandler` directly — it is configur
 through `Able.initialize(handleException:, onError:)`.
 
 ## Common mistakes
-Documented usage mistakes are covered by `rules/anti-patterns.md` #6 and #8. The rest of this
-document is a **verified package defect**, not a usage mistake — surfaced here because the
-knowledge base's job is to report contradictions between documented behavior and actual code
-rather than silently normalize them.
+Documented usage mistakes are covered by `rules/anti-patterns.md` #6 and #8.
 
-## Known defect 1 — `.onError` is effectively dead code
+## Fixed defects (history)
 
-`ExceptionHandler`'s factory constructor is:
+Both defects below were verified against source, documented here, and fixed in 0.1.0 with
+regression tests in `test/regression_test.dart`. They are kept as history, per `SKILL.md`'s rule
+of recording contradictions rather than quietly normalizing them.
+
+### Defect 1 (fixed) — `.onError` was never called
+
+The factory constructor used to be:
 
 ```dart
 factory ExceptionHandler({OnError? onError}) {
@@ -54,44 +57,18 @@ factory ExceptionHandler({OnError? onError}) {
 }
 ```
 
-This unconditionally overwrites `_handler.onError`, including when called with no argument --
-`ExceptionHandler()` (bare) always sets `.onError = null` as a side effect of merely obtaining the
-singleton instance. Every call site other than `Able.initialize` calls `ExceptionHandler()` bare:
-`AbleCubit.presentF`/`presentP`'s error branch (`ExceptionHandler().handleException(...)`) and
-`ProgressablesResultPresenter._handleCubitStateChanges` (`ExceptionHandler().onError?.call(...)`)
-both do this. Traced through the actual call order:
+It overwrote `.onError` even when called with no argument, and every call site other than
+`Able.initialize` calls `ExceptionHandler()` bare (`presentF`/`presentP`'s error branch and
+`ProgressablesResultPresenter`). So the first unexpected error cleared the callback before it was
+ever read, and the `onError` passed to `Able.initialize` was never invoked.
 
-1. `Able.initialize(onError: myOnError)` sets `.onError = myOnError` correctly — the only call
-   site that passes a non-null `onError`.
-2. The first unexpected error anywhere in the app reaches `presentF`/`presentP`'s error branch,
-   which calls `ExceptionHandler().handleException(...)` — the bare `ExceptionHandler()` call
-   resets `.onError` to `null` before `handleException` even runs.
-3. `ProgressablesResultPresenter` later reads `ExceptionHandler().onError?.call(...)` for the same
-   error — but this read is itself a bare `ExceptionHandler()` call, so it resets `.onError` to
-   `null` again immediately before reading the (already-null) field.
+**Fix:** the factory now only assigns `onError` when one is passed.
 
-Net effect: the `onError` callback configured via `Able.initialize` is not reachable in practice.
-`rules/patterns.md`'s claim that "`onError` is what `ProgressablesResultPresenter` calls for
-errors not marked `shouldIgnoreMessage`" describes the intended design, not the actual runtime
-behavior. `handleException`/`isExpectedError`/`shouldIgnoreMessage` are unaffected — they don't
-depend on `.onError` — so this defect is narrow but real.
+### Defect 2 (fixed) — `presentP` tagged errors `AbleType.fetchable`
 
-This is a genuine source contradiction, not a documentation error to quietly fix by rewording the
-rule. The rule accurately describes the intended architecture; the code doesn't implement it.
-Resolving it means either patching `ExceptionHandler`'s factory (e.g. only assign when
-`onError != null`) or providing a separate setter — a decision for whoever owns the `able`
-package, not something this knowledge base silently papers over.
+`Stream<Progressable>.presentP` copied `presentF`'s `AbleType.fetchable` literal, so any
+`handleException` subscriber branching on `type` saw the wrong tag for `Progressable` errors.
 
-## Known defect 2 — `presentP` mistags errors as `AbleType.fetchable`
-
-In `lib/src/utils/able_cubit.dart`, `Stream<Progressable>.presentP`'s error branch calls:
-
-```dart
-ExceptionHandler().handleException(e, s, AbleType.fetchable);
-```
-
-This should be `AbleType.progressable` — `presentF`'s equivalent line correctly passes
-`AbleType.fetchable`, but `presentP` copies the same literal instead of `AbleType.progressable`.
-Consequence: any `handleException` subscriber that branches on `type` (e.g. to log
-"Exception trapped by Able SDK ($type)", as telavi_app's `main.dart` does) always sees
-`AbleType.fetchable`, even for errors that originated from a `Progressable` stream.
+**Fix:** `presentP` passes `AbleType.progressable`. `AbleType` is now exported from
+`package:able/able.dart`; before, a `handleException` callback could receive it but could not
+name the type.

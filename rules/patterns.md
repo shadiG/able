@@ -343,6 +343,10 @@ void _initPhoneNumberMask() => executeSF(
 
 - `.distinct()` on every `mapFStream`/combined stream in this chain is load-bearing, not
   decoration — see [[cubits]] for why.
+- When the inputs can change faster than the computation finishes (a search query), use
+  `switchMapOnSuccessF` instead, so a stale result can't overwrite a fresh one. The example app's
+  `CountryListViewCubit._initVisibleCountries` does this. Only safe because the computed field is
+  not one of the inputs.
 - `combineNFStreams` (not the value-level `combineNF`) belongs in a constructor/`_init*` method,
   where the goal is a live subscription that keeps recomputing as any input changes.
 - One cubit field can depend on another field *of the same cubit* this way, not just on another
@@ -540,8 +544,8 @@ field is what `FetchableListWidget<CountryListItem>` renders.
 - For derived view-cubit fields, call the input method and let the event loop settle
   (`await Future<void>.delayed(const Duration(milliseconds: 10))`) before reading
   `state.xF.data`. Reading `.data` in a test is fine; in production code it is not (item 4).
-- To assert a field *failed*, wait on the state stream (`await cubit.stream.firstWhere((s) =>
-  s.countriesF.hasError)`), not on `.asFuture` — see [[anti-patterns]] #10.
+- To assert a field *failed*, `expectLater(cubit.countries, throwsA(isA<CountryLoadException>()))`
+  works: `.asFuture` completes with the error and stops listening.
 - Close every cubit you create at the end of the test.
 
 Reference: `example/country_listing/test/`.

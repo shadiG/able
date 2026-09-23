@@ -14,7 +14,7 @@ lib/
     common/
       able_config.dart          # Able.initialize() / Able.configs — global loading & error widgets
       able_state.dart           # AbleState enum (idle/busy/success/error) + `+` combinator
-      able_type.dart            # AbleType enum (fetchable/progressable) — tags exceptions by origin
+      able_type.dart            # AbleType enum (fetchable/progressable) — tags exceptions by origin; exported
       able_utils.dart           # cross-cutting extensions (asFetchable, asProgressable, list helpers)
     fetchable/
       fetchable.dart            # Fetchable<D> sealed-style class hierarchy
@@ -72,26 +72,19 @@ raised inside `executeF`/`executeP` reach app-level logging/crash-reporting with
 site wiring it up individually. See [[anti-patterns]] for what happens when `initialize()` is
 skipped or called twice (it's a no-op the second time, with a `debugPrint` warning).
 
-### Known defects in the exception-handling path (verified against source)
+### Fixed defects in the exception-handling path (0.1.0)
 
-Two defects in `lib/src/utils/exception_handler.dart`/`able_cubit.dart` undermine part of the
-design above. Full write-up with call-order tracing: `knowledge/concepts/ExceptionHandler.md`.
+Two defects here were fixed in 0.1.0, each with a regression test in `test/regression_test.dart`.
+The full history is in `knowledge/concepts/ExceptionHandler.md`.
 
-1. **`Able.configs`'s `onError` callback is effectively dead code.** `ExceptionHandler`'s factory
-   constructor unconditionally does `_handler.onError = onError`, including when called with no
-   argument. Every call site other than `Able.initialize` calls `ExceptionHandler()` bare (in
-   `presentF`/`presentP`'s error branch, and in `ProgressablesResultPresenter`), which resets
-   `.onError` to `null` as a side effect of merely obtaining the singleton — before it is ever
-   read. `handleException`/`isExpectedError`/`shouldIgnoreMessage` are unaffected.
-2. **`presentP` tags every error `AbleType.fetchable`.** It should pass `AbleType.progressable`;
-   it copies `presentF`'s literal instead. Any `handleException` subscriber that branches on
-   `type` sees the wrong tag for `Progressable`-originated errors.
+1. **`Able.configs`'s `onError` callback was never called.** `ExceptionHandler`'s factory
+   assigned `onError` even when called with no argument, so every bare `ExceptionHandler()` call
+   cleared it. The factory now only replaces `onError` when one is passed.
+2. **`presentP` tagged errors `AbleType.fetchable`.** It now passes `AbleType.progressable`.
+   `AbleType` is also exported now, so a `handleException` callback can name it.
 
-A third, unrelated defect — `Stream<Fetchable<T>>.asFuture` keeps listening after completing
-with an error — is described in [[cubits]] ("One-shot reads") and [[anti-patterns]] #10.
-
-These are package-source defects, not usage mistakes — do not work around them in application
-code without first deciding whether to patch `able` itself.
+The `asFuture` keep-listening-after-error defect (see [[cubits]], "One-shot reads") was fixed in
+the same release.
 
 ## Consuming-app conventions (observed in practice, not enforced by the package)
 

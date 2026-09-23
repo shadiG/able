@@ -91,26 +91,24 @@ Progressable toProgressable({required AbleState state, dynamic exception}) {
     case AbleState.success:
       return SuccessProgressable();
     case AbleState.error:
-      if (exception == null) {
-        throw StateError('Progressable(Error): must specify the error');
-      }
+      // The exception may legitimately be null (`Progressable.error(null)`).
       return ErrorProgressable(exception: exception);
   }
 }
 
-class IdleProgressable<D> extends Progressable {
+class IdleProgressable extends Progressable {
   IdleProgressable() : super._();
 }
 
-class SuccessProgressable<D> extends Progressable {
+class SuccessProgressable extends Progressable {
   SuccessProgressable() : super._();
 }
 
-class BusyProgressable<D> extends Progressable {
+class BusyProgressable extends Progressable {
   BusyProgressable() : super._();
 }
 
-class ErrorProgressable<D> extends Progressable {
+class ErrorProgressable extends Progressable {
   final dynamic exception;
 
   ErrorProgressable({required this.exception}) : super._();

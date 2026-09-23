@@ -44,11 +44,10 @@ class _ProgressablesResultPresenterState<C extends AbleCubit<S>, S> extends Stat
     super.initState();
     final cubit = context.read<C>();
     lastProgressables = cubitStateToProgressables(cubit.state);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      cubitSubscription = context.read<C>().stream.listen((state) {
-        _handleCubitStateChanges(state);
-        lastProgressables = cubitStateToProgressables(state);
-      });
+    // Subscribe now rather than after the first frame, so no change is missed.
+    cubitSubscription = cubit.stream.listen((state) {
+      _handleCubitStateChanges(state);
+      lastProgressables = cubitStateToProgressables(state);
     });
   }
 
@@ -74,7 +73,8 @@ class _ProgressablesResultPresenterState<C extends AbleCubit<S>, S> extends Stat
         });
       }
 
-      if (progressable.error != lastProgressable.error && progressable.error != null) {
+      // hasError rather than `error != null`, so `Progressable.error(null)` is reported too.
+      if (progressable.hasError && progressable != lastProgressable) {
         final shouldIgnore = presenter.shouldIgnoreMessage?.call(progressable.error) ?? false;
         presenter.onError?.call(progressable.error);
 

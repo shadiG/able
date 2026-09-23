@@ -39,6 +39,7 @@ class CountryListViewCubit extends AbleCubit<CountryListViewState> {
       );
 
   /// Recomputes the visible rows whenever the data or any filter changes.
+  /// `switchMapOnSuccessF` drops a result whose inputs have since changed.
   void _initVisibleCountries() => executeSF(
         combine5FStreams(
           s1: mapFStream((s) => s.countriesF).distinct(),
@@ -46,7 +47,7 @@ class CountryListViewCubit extends AbleCubit<CountryListViewState> {
           s3: mapFStream((s) => s.queryF).distinct(),
           s4: mapFStream((s) => s.regionF).distinct(),
           s5: mapFStream((s) => s.onlyFavoritesF).distinct(),
-        ).distinct().flatMapOnSuccessF((data) {
+        ).distinct().switchMapOnSuccessF((data) {
           final (countries, favoriteCodes, query, region, onlyFavorites) = data;
           return futureAsFetchable(() async {
             final needle = query.trim().toLowerCase();

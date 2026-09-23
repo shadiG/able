@@ -15,7 +15,7 @@
 /// ```dart
 /// import 'package:able/able.dart';
 /// ```
-library able;
+library;
 
 export 'package:able/src/common/export.dart';
 export 'package:able/src/fetchable/export.dart';

@@ -47,23 +47,24 @@ catch it there and convert it to `Fetchable.error(e)` at the boundary.
 `combine2F`..`combine9F` (values) and `combine2FStreams`..`combine9FStreams` (streams, via
 `rxdart`'s `CombineLatestStream`) merge `Fetchable<T1>..Fetchable<Tn>` into
 `Fetchable<(T1, ..., Tn)>` — a Dart record. Success only when **every** input is success; overall
-`AbleState` is `f1.state + f2.state + ... ` (idle beats busy beats error beats success, see
+`AbleState` is `f1.state + f2.state + ... ` (error beats idle beats busy beats success, see
 [[state-management]]); the first non-null `.error` among the inputs is used.
 
-> **Known bug to be aware of** (`fetchable_utils.dart`): `combine7F`, `combine8F`, and `combine9F`
-> omit `f6.state` (and `combine8F`/`combine9F` also omit further terms) from the `state:`
-> expression they pass to `toFetchable` — e.g. `combine7F`'s state sum is
-> `f1.state + f2.state + f3.state + f4.state + f5.state + f7.state` (no `f6.state`). In practice
-> this only matters when `f6` is the *sole* non-success input among 7–9 combined values (e.g. only
-> `f6` is `busy` while the rest are `success`) — the combined result can read `success` one tick
-> early. Prefer nesting `combine2F`/`combine3F` calls, or combine fewer than 7 at once, if this
-> edge case matters for a given screen.
+> **Fixed in 0.1.0:** `combine7F`, `combine8F` and `combine9F` used to leave `f6.state` out of
+> the combined state, so the result could read `success` while the 6th input was still busy. They
+> now sum every input (regression test: `test/regression_test.dart`).
 
 ### Deriving a dependent fetch
 
 `Stream<Fetchable<T>>.flatMapOnSuccessF<S>(Stream<Fetchable<S>> Function(T) mapper)` — only calls
 `mapper` once the source reaches success, passing through idle/busy/error otherwise (cast via
-`.cast<S>()`). `flatMapOnSuccessFToProgressable<S>` does the same but the dependent stream is a
+`.cast<S>()`). Every inner stream runs to completion, even after a newer upstream value.
+
+`switchMapOnSuccessF<S>` (0.1.0) is the same, except a new upstream value cancels the previous
+inner stream, so a slow result for an old input can't overwrite a newer one. Use it for derived
+values such as search results. Don't use it when the result is written back into the source
+stream (a cubit reading its own field and rebuilding it): the write-back cancels the inner stream
+before it finishes. `flatMapOnSuccessFToProgressable<S>` does the same but the dependent stream is a
 `Progressable`.
 
 ## `Progressable` — an action with no result
@@ -93,24 +94,26 @@ Stream<Progressable> futureAsProgressable(Future Function() func); // yields bus
 Same error-propagates-as-stream-error contract as `futureAsFetchable`. `able_utils.dart` also
 exposes `emptyP` — a ready-made `Stream<Progressable>` that resolves immediately
 (`futureAsProgressable(() async => null)`) — handy as a stub `elseP` in `AbleCubit.doIf`, or a
-placeholder dependency in tests.
+placeholder dependency in tests. It is a getter that returns a new stream on every read (before
+0.1.0 it was one shared stream and threw on its second listen).
 
 ### Combining several `Progressable`s
 
 `combine2P`..`combine9P` and `*PStreams` mirror the `Fetchable` combinators, minus the payload
-tuple — overall state via `AbleState.+`, first error wins. (These do not have the missing-term bug
-described above; only the `Fetchable` combine7F/8F/9F functions are affected.)
+tuple — overall state via `AbleState.+`, first error wins.
 
 ### Extension helpers
 
-- `T Function().asProgressable()` / `T Function().asFetchable()` — wrap a plain closure.
+- `T Function().asProgressable()` / `T Function().asFetchable()` — wrap a plain closure and call
+  it when the stream is listened to. (Before 0.1.0, `asProgressable` never called the closure.)
 - `Future<T>.asProgressable()` / `Future<T>.asFetchable()` — wrap an existing `Future`.
 - `Stream<Progressable>.flatMapOnSuccessP(AbleCubit cubit, Stream<Progressable> Function() mapper)`
   — chain a second action after the first succeeds, both as one combined `Progressable` stream.
 - `List<Fetchable>`/`List<Progressable>` boolean aggregates — see [[state-management]].
 
 Both types implement structural `==`/`hashCode`/`toString()` by hand, so
-`Fetchable.success(x) == Fetchable.success(x)` holds when `x == x`, and printing a `Fetchable` in
+`Fetchable.success(x) == Fetchable.success(x)` holds when `x == x` — regardless of the type
+argument since 0.1.0, so `Fetchable<int?>.success(null) == Fetchable<Null>.success(null)`, and printing a `Fetchable` in
 logs (`'Fetchable(Success) : $data'`) is safe to leave in for debugging.
 
 ## Related knowledge

@@ -19,9 +19,14 @@ enum AbleState { idle, busy, success, error }
 - **error** — completed with an exception; both carry `.error` (`dynamic`).
 
 `AbleState` has a `+` operator (`able_state.dart`) used to combine multiple states when several
-`Fetchable`/`Progressable`s are merged (see the `combineNF`/`combineNP` family): idle beats
-everything, then busy, then error, then success. This is why combining two fields where one is
-still `idle` yields an overall `idle` result, not a partial `success`.
+`Fetchable`/`Progressable`s are merged (see the `combineNF`/`combineNP` family): error beats
+everything, then idle, then busy, then success. So an error in any input shows at once, even while
+another input is still loading, and a field that is still `idle` yields an overall `idle` result,
+not a partial `success`. (Before 0.1.0, idle and busy beat error, which hid a failure until every
+other input finished — see [[ADR-006-errors-win-when-combining]].)
+
+`Fetchable.error(null)` and `Progressable.error(null)` are valid error states: widgets and
+combinators check `.hasError`, never `.error != null`.
 
 ## Immutability
 
@@ -90,5 +95,6 @@ transitions are driven through `AbleCubit`.
 ## Related knowledge
 
 - Concepts: [[AbleState]], [[Fetchable]], [[Progressable]]
-- Decisions: [[ADR-001-stream-based-async-state]], [[ADR-002-separate-fetchable-progressable-types]]
+- Decisions: [[ADR-001-stream-based-async-state]], [[ADR-002-separate-fetchable-progressable-types]],
+  [[ADR-006-errors-win-when-combining]]
 - Graph: `knowledge/graph/graph.json` (node `rule-state-management`)

@@ -15,9 +15,9 @@ class AbleCubit<State> extends Cubit<State> {
   Future<void> close();                                   // disposes tracked subscriptions first
 
   Stream<Fetchable<T>>  mapFStream<T>(Fetchable<T> Function(State) s);
-  Stream<Progressable>  mapPStream<T>(Progressable Function(State) s);
+  Stream<Progressable>  mapPStream(Progressable Function(State) s);
 
-  void rebuild(State state) => emit(state);                // the only way state is set
+  void rebuild(State state);          // emit, ignored once the cubit is closed
 
   Stream<Progressable> doIf({
     required Stream<Progressable> ifP,
@@ -27,8 +27,10 @@ class AbleCubit<State> extends Cubit<State> {
 }
 ```
 
-- **`rebuild`** is just `emit` under a different name — call it, not `emit`, so state transitions
-  read consistently across a codebase built on `able`.
+- **`rebuild`** is `emit` under a different name — call it, not `emit`, so state transitions
+  read consistently across a codebase built on `able`. Since 0.1.0 it does nothing once the cubit
+  is closed, so a `futureAsProgressable` body that finishes after its screen was popped no longer
+  throws "Cannot emit new states after calling close".
 - **`mapFStream`/`mapPStream`** project one field of *this* cubit's `State` into a stream other
   cubits (or widgets) can subscribe to: `stream.startWith(state).map(selector)` — note the
   `startWith(state)`, which is why a subscriber always receives the current value immediately,
@@ -46,12 +48,14 @@ Two families of extension methods do the actual work, both defined in `able_cubi
 
 ### `presentF` / `presentP` — the low-level plumbing
 
-`Stream<Fetchable<T>>.presentF(cubit, onData, {onUnexpectedError, isExpectedError, doIf})` and the
+`Stream<Fetchable<T>>.presentF(cubit, onData, {onUnexpectedError, isExpectedError})` and the
 `Progressable` equivalent `presentP` `listen()` to the stream, forward every value to `onData`,
 and on a stream **error** wrap it as `Fetchable.error(e)`/`Progressable.error(e)` before calling
 `onData`. If the error is not marked `isExpectedError`, it's also forwarded to
 `ExceptionHandler().handleException(...)` (app-level logging/crash reporting). You will rarely
 call `presentF`/`presentP` directly — reach for `executeF`/`executeP`/`executeSF`/`executeSP`.
+The stream-receiver `stream.executeF(cubit, ...)`/`stream.executeP(cubit, ...)` variants are
+deprecated: they ignore the stream they are called on.
 
 ### `executeF` / `executeSF` / `executeP` / `executeSP` — what you actually call
 
@@ -76,8 +80,9 @@ All four take:
   under the hood); pass `takeOnce: false` for a subscription meant to live for the cubit's whole
   lifetime (e.g. mirroring another cubit's ongoing `Fetchable` stream).
 
-`executeSP` additionally accepts `onSuccessP:` — a second `Progressable` stream to run *after*
-the first succeeds, combined via `combine2PStreams` so the overall progress reflects both steps.
+`executeSP` additionally accepts `onSuccessP:` — a second `Progressable` stream that starts only
+*after* the first succeeds; the reported progress stays busy until both finish. (Before 0.1.0 it
+was combined with `combine2PStreams`, which started both at once.)
 
 ### `.distinct()` is load-bearing on `mapFStream`/`mapPStream` and combined streams
 
@@ -114,13 +119,10 @@ this is how a business method awaits another cubit's field synchronously
 (`await contactCubit.mapFStream((s) => s.contactsF).asFuture(this)`) or awaits its own dependent
 action mid-flow (`await mapper().asFuture(cubit)` inside `flatMapOnSuccessP`).
 
-> **Known defect** (`able_cubit.dart`, `AbleCubitFStreamExtensions.asFuture`): the subscription
-> is only closed after a *success* (`takeOnceSuccess()`), so after completing the `Future` with an
-> error it keeps listening. If the same field later reaches `success`, `completer.complete` runs a
-> second time and throws `Bad state: Future already completed` as an uncaught error. Found while
-> testing `example/country_listing` (a load that fails once, then succeeds on Retry). The fix
-> belongs in `able` — stop on error as well as success, or guard with `completer.isCompleted` —
-> with a regression test. See [[anti-patterns]] #10 for how to avoid it until then.
+Both stop listening at the first success **or** error. (Before 0.1.0 they only stopped at a
+success, so a field that errored and then recovered completed the `Future` a second time and threw
+`Bad state: Future already completed`. Found while testing `example/country_listing`; regression
+test in `test/regression_test.dart`.)
 
 ## Streams as sources, not just async values
 

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:able/able.dart';
-import 'package:able/src/common/able_type.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -46,10 +45,15 @@ class AbleCubit<State> extends Cubit<State> {
   Stream<Fetchable<T>> mapFStream<T>(Fetchable<T> Function(State m) s) =>
       stream.startWith(state).map(s);
 
-  Stream<Progressable> mapPStream<T>(Progressable Function(State m) s) =>
+  Stream<Progressable> mapPStream(Progressable Function(State m) s) =>
       stream.startWith(state).map(s);
 
-  void rebuild(State state) => emit(state);
+  /// Emits [state]. Ignored once the cubit is closed, so async work that
+  /// finishes after its screen is gone does not throw.
+  void rebuild(State state) {
+    if (isClosed) return;
+    emit(state);
+  }
 }
 
 extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
@@ -60,7 +64,6 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
     Function(Fetchable<T> F)? onData, {
     void Function(dynamic e, StackTrace s)? onUnexpectedError,
     bool Function(dynamic e)? isExpectedError,
-    Stream<Fetchable<bool>>? doIf,
   }) {
     return cubit.closeWithCubit(listen(onData, onError: (e, s) {
       final isExpected = isExpectedError != null && isExpectedError(e);
@@ -72,6 +75,7 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
     }));
   }
 
+  @Deprecated('Ignores the stream it is called on. Call executeF on the cubit instead.')
   StreamSubscription executeF<SP>(
     AbleCubit cubit,
     Future<SP> Function() future, {
@@ -94,7 +98,9 @@ extension AbleCubitFStreamExtensions<T> on Stream<Fetchable<T>> {
   ) async {
     final completer = Completer<T>();
 
-    takeOnceSuccess().presentF(cubit, (F) {
+    // Stops at the first success or error, so a later value can't complete twice.
+    takeWhileInclusive((f) => !f.success && !f.hasError).presentF(cubit, (F) {
+      if (completer.isCompleted) return;
       if (F.success) {
         return completer.complete(F.data);
       }
@@ -120,11 +126,12 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
       onData?.call(Progressable.error(e));
       if (!isExpected) {
         onUnexpectedError?.call(e, s);
-        ExceptionHandler().handleException(e, s, AbleType.fetchable);
+        ExceptionHandler().handleException(e, s, AbleType.progressable);
       }
     }));
   }
 
+  @Deprecated('Ignores the stream it is called on. Call executeP on the cubit instead.')
   StreamSubscription executeP(
     AbleCubit cubit,
     Future Function() future, {
@@ -147,7 +154,9 @@ extension AbleCubitPStreamExtension on Stream<Progressable> {
   ) async {
     final completer = Completer<bool>();
 
-    distinct().takeOnceSuccess().presentP(cubit, (P) {
+    // Stops at the first success or error, so a later value can't complete twice.
+    distinct().takeWhileInclusive((p) => !p.success && !p.hasError).presentP(cubit, (P) {
+      if (completer.isCompleted) return;
       if (P.success) {
         return completer.complete(true);
       }
@@ -217,10 +226,10 @@ extension AbleCubitExt<T> on AbleCubit<T> {
     bool takeOnce = true,
   }) {
     if (onSuccessP != null) {
-      return combine2PStreams(
-        s1: (takeOnce ? progressable.takeOnceSuccess() : progressable),
-        s2: onSuccessP(),
-      ).presentP(
+      // onSuccessP starts only once the first action succeeds.
+      return (takeOnce ? progressable.takeOnceSuccess() : progressable)
+          .switchMap((p) => p.success ? onSuccessP() : Stream.value(p))
+          .presentP(
         this,
         then,
         onUnexpectedError: onUnexpectedError,
